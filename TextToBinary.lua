@@ -1,4 +1,4 @@
---- default onTick function; called once per in-game tick (60 per second)
+--- default onTick function called once per in-game tick (60 per second)
 
 codes={}
 codes["a"] = {1,1,1,0,1,1,1}

@@ -1,4 +1,4 @@
-require("MyMath")
+require("Utils.MyMath")
 
 maxDistance = 5000
 

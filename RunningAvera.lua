@@ -18,15 +18,15 @@ do
     ---@type Simulator -- Set properties and screen sizes here - will run once when the script is loaded
     simulator = simulator
     simulator:setProperty("Average Consumption Time In Seconds", 5)
-	local start = 5000;
-    -- Runs every tick just before onTick; allows you to simulate the inputs changing
+	local start = 5000
+    -- Runs every tick just before onTick allows you to simulate the inputs changing
     ---@param simulator Simulator Use simulator:<function>() to set inputs etc.
     ---@param ticks     number Number of ticks since simulator started
     function onLBSimulatorTick(simulator, ticks)
 
 		start = start - ((math.random(75, 100)-1)/60)
         simulator:setInputNumber(1, start)
-    end;
+    end
 end
 ---@endsection
 
@@ -40,15 +40,15 @@ require("LifeBoatAPI.Maths.LBRollingAverage")
 	local averageTime = property.getNumber("Average Consumption Time In Seconds")
 	local samplesPerSecond = 60
 	local maxTicks=averageTime*samplesPerSecond
-	local average = LifeBoatAPI.LBRollingAverage:new(maxTicks);
+	local average = LifeBoatAPI.LBRollingAverage:new(maxTicks)
 	local level = 0
 function onTick()
     local number = input.getNumber(1)
 	if level == 0 then level = number end
-	local diff = level-number;
-	level = number;
+	local diff = level-number
+	level = number
 	local avg = average:lbrollingaverage_addValue(diff)
 	avg = avg*samplesPerSecond*100
 	avg = math.floor(avg+0.5)/100
-	output.setNumber(1, avg);
+	output.setNumber(1, avg)
 end

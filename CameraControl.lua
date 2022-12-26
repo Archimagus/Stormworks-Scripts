@@ -40,20 +40,10 @@ end
 require("Utils.MyMath")
 require("Utils.MyUITools")
 
-minp = property.getNumber("Min Camera Pan Speed") or 0.1
-maxp = property.getNumber("Max Camera Pan Speed") or 0.1
-mint = property.getNumber("Min Camera Tilt Speed") or 0.1
-maxt = property.getNumber("Max Camera Tilt Speed") or 0.1
 zoomSpeed = property.getNumber("Zoom Speed") or 0.01
 
-invertT = property.getBool("Invert Tilt")
-invertP = property.getBool("Invert Pan")
-laserEnable = false
-lightEnable = false
 
 local zoom = 0
-local tilt = 0
-local pan = 0
 
 gridX=11
 gridY=7
@@ -64,17 +54,8 @@ baseStyle.va =0
 baseStyle.txo = 1
 baseStyle.tyo = 0
 
-local lz = addElement({ x = 7.5, y = 3, w = 1, t = "LZ", tg = false,
+local ir = addElement({ x = 7.5, y = 3, w = 1, t = "IR", tg = false,
 	uf = function(b) outB(1, b.tg) end -- Output true on channel if button is toggled
-})
-local st = addElement({ x = 7.5, y = 5, w = 1, t = "ST", tg = false,
-	uf = function(b) outB(2, b.tg) end -- Output true on channel if button is toggled
-})
-local tr = addElement({ x = 7.5, y = 7, w = 1, t = "TR", tg = false,
-	uf = function(b) outB(3, b.tg) end -- Output true on channel if button is toggled
-})
-local ir = addElement({ x = 7.5, y = 9, w = 1, t = "IR", tg = false,
-	uf = function(b) outB(4, b.tg) end -- Output true on channel if button is toggled
 })
 
 local zi = addElement({ x = 7.5, y = 0.1, t = "+", st={ha=0, va=0, txo=1, tyo=0}, hf = function(b) zoom = clamp(zoom + zoomSpeed, 0, 1) end })
@@ -94,40 +75,20 @@ end
 function onTick()
 	tickUI()
 
-	invertTilt = 1
-	if invertT then
-		invertTilt = -1
-	end
-	invertPan = 1
-	if invertP then
-		invertPan = -1
-	end
-	distance = input.getNumber(10)
-	local p = input.getNumber(5)
-	local t = input.getNumber(6)
 	local z = input.getNumber(7)
 
 	if z>0.1 then zi.p=true end
 	if z<-0.1 then zo.p=true end
 
-	press(lz, input.getBool(5))
-	press(st, input.getBool(6))
-	press(tr, input.getBool(7))
 	press(ir, input.getBool(8))
 
 	zoom = clamp(zoom + zoomSpeed * z, 0, 1)
 	fov = 1 - (1 - zoom) * (1 - zoom); -- ease the value to make zoom slower it gets tighter
-	tilt = t * lerp(maxt, mint, fov) * invertTilt
-	pan = p * -lerp(maxp, minp, fov) * invertPan
 	
-	output.setNumber(1, pan)
-	output.setNumber(2, tilt)
-	output.setNumber(4, fov)
+	output.setNumber(1, fov)
 
 end
 
 function onDraw()
 	drawUI()
-	screen.setColor(0, 255, 0)
-	screen.drawText(2, screen.getHeight() - 6, "" .. math.floor(distance) .. "m")
 end

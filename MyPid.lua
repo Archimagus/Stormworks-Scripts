@@ -14,12 +14,12 @@
 -- maxOutput: 7
 
 -- Developed using LifeBoatAPI - Stormworks Lua plugin for VSCode - https://code.visualstudio.com/download (search "Stormworks Lua with LifeboatAPI" extension)
---      By Nameous Changey (Please retain this notice at the top of the file as a courtesy; a lot of effort went into the creation of these tools.)
---- With LifeBoatAPI; you can use the "require(...)" keyword to use code from other files!
+--      By Nameous Changey (Please retain this notice at the top of the file as a courtesy a lot of effort went into the creation of these tools.)
+--- With LifeBoatAPI you can use the "require(...)" keyword to use code from other files!
 ---     This lets you share code between projects, and organise your work better.
 ---     The below, includes the content from SimulatorConfig.lua in the generated /_build/ folder
 --- (If you want to include code from other projects, press CTRL+COMMA, and add to the LifeBoatAPI library paths)
-require("MyMath")
+require("Utils.MyMath")
 local error_prior = 0
 local integral_prior = 0
 local derivative = 0
@@ -84,7 +84,7 @@ function onTick()
 	value_out = kp * error + ki * integral + kd * derivative + bias
 
 	if value_out > maxOutput or value_out < minOutput then
-		integral = integral - error;
+		integral = integral - error
 	end
 
 

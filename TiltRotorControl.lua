@@ -20,7 +20,7 @@ do
     simulator:setScreen(1, "3x3")
     simulator:setProperty("ExampleNumberProperty", 123)
 
-    -- Runs every tick just before onTick allows you to simulate the inputs changing
+    -- Runs every tick just before onTick; allows you to simulate the inputs changing
     ---@param simulator Simulator Use simulator:<function>() to set inputs etc.
     ---@param ticks     number Number of ticks since simulator started
     function onLBSimulatorTick(simulator, ticks)
@@ -39,7 +39,7 @@ do
 
         simulator:setInputBool(32, simulator:getIsToggled(2))       -- make button 2 a toggle, for input.getBool(32)
         simulator:setInputNumber(32, simulator:getSlider(2) * 50)   -- set input 32 to the value from slider 2 * 50
-    end
+    end;
 end
 ---@endsection
 
@@ -49,11 +49,42 @@ end
 -- try require("Folder.Filename") to include code from another file in this, so you can store code in libraries
 -- the "LifeBoatAPI" is included by default in /_build/libs/ - you can use require("LifeBoatAPI") to get this, and use all the LifeBoatAPI.<functions>!
 
-ticks = 0
+require("Utils.MyMath")
+require("Utils.MyIoUtils")
+
+ heloAngle, planeAngle = propN("HeloAngle", "PlaneAngle")
+
+ local initialPropAngle = 9999
+ local targetPropAngle
+ local togglePressed = false
+
 function onTick()
-    ticks = ticks + 1
+	local currentPropAngle = getN(1)*4
+
+	if initialPropAngle == 9999 then
+		initialPropAngle = currentPropAngle
+		targetPropAngle = currentPropAngle
+	end
+
+	local planePercent = invLerp(currentPropAngle, heloAngle, planeAngle)
+	local planeMode = planePercent > 0.5
+
+	
+	local toggleProp = getB(1)
+	local toggle = togglePressed and ~toggleProp
+	togglePressed = toggleProp
+
+	if toggle then
+		if planeMode then 
+			targetPropAngle = heloAngle
+		else
+			targetPropAngle = planeAngle
+		end
+	end
+
+
+	O.setBool(1, planeMode)
+	outN(1, planePercent, currentPropAngle, targetPropAngle)
+
 end
 
-function onDraw()
-    screen.drawCircle(16,16,5)
-end
