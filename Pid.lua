@@ -19,21 +19,16 @@
 ---     This lets you share code between projects, and organise your work better.
 ---     The below, includes the content from SimulatorConfig.lua in the generated /_build/ folder
 --- (If you want to include code from other projects, press CTRL+COMMA, and add to the LifeBoatAPI library paths)
-require("Utils.MyMath")
-local error_prior = 0
-local integral_prior = 0
-local derivative = 0
-local kp = 0
-local ki = 0
-local kd = 0
-local bias = 0
-function getSign(error)
-	if error < 0 then
-		return -1
-	else
-		return 1
-	end
-end
+require("Utils.MyPid")
+
+local myPid = PID:new(
+	property.getNumber("P") or 0.6,
+	property.getNumber("I") or 0,
+	property.getNumber("D") or 0.2,
+	property.getNumber("bias") or 0,
+	property.getNumber("minOutput") or -9999,
+	property.getNumber("maxOutput") or 9999
+)
 
 function setPid()
 	p = input.getNumber(3)
@@ -42,67 +37,43 @@ function setPid()
 	minOutput = input.getNumber(6)
 	maxOutput = input.getNumber(7)
 
-	if minOutput == 0 and maxOutput == 0 then
-		minOutput = property.getNumber("minOutput") or -9999
-		maxOutput = property.getNumber("maxOutput") or 9999
-	end
-	if p == 0 and i == 0 and d == 0 then
-		p = property.getNumber("P") or 0.6
-		i = property.getNumber("I") or 0
-		d = property.getNumber("D") or 0.2
-	end
 	if p ~= 0 or i ~= 0 or d ~= 0 then
-		kp = p
-		ki = i
-		kd = d
+		myPid.p = p
+		myPid.i = i
+		myPid.d = d
+	end
+	if minOutput ~= 0 or maxOutput ~= 0 then
+		myPid.minOutput = minOutput
+		myPid.maxOutput = maxOutput
 	end
 end
 function onTick()
 	on = input.getBool(1)
-	if not on then
 
+	setPid()
+	
+	output.setBool(1, input.getBool(1))
+	output.setNumber(6, myPid.p)
+	output.setNumber(7, myPid.i)
+	output.setNumber(8, myPid.d)
+	if not on then
 		integral_prior = 0
 		output.setNumber(1, 0)
 		output.setNumber(2, 0)
 		output.setNumber(3, 0)
 		output.setNumber(4, 0)
-
-		output.setNumber(6, kp)
-		output.setNumber(7, ki)
-		output.setNumber(8, kd)
 		return
 	end
 
 	target = input.getNumber(1)
 	process = input.getNumber(2)
-	setPid()
 
-	error = target - process
-	integral = integral_prior + error
-	derivative = error - error_prior
-
-	value_out = kp * error + ki * integral + kd * derivative + bias
-
-	if value_out > maxOutput or value_out < minOutput then
-		integral = integral - error
-	end
-
-
-	error_prior = error
-	integral_prior = integral
-
-	clamp(value_out, minOutput, maxOutput)
+	value_out = myPid:update(target, process)
 
 	output.setNumber(1, value_out)
-	output.setNumber(2, error)
-	output.setNumber(3, integral)
-	output.setNumber(4, derivative)
-
-	output.setNumber(6, kp)
-	output.setNumber(7, ki)
-	output.setNumber(8, kd)
-
-	output.setBool(1, input.getBool(1))
+	output.setNumber(2, myPid.error)
+	output.setNumber(3, myPid.integral)
+	output.setNumber(4, myPid.derivative)
 end
 
 --- Ready to put this in the game?
