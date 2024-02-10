@@ -11,8 +11,23 @@
 -- Remember to set your Author name etc. in the settings: CTRL+COMMA
 
 -- require("LifeBoatAPI.Tickable.LBTouchScreen")
--- require("Utils.StateMachine")
-require("LifeBoatAPI.Tickable.LBStateMachine")
+
+
+require("Utils.MyIoUtils")
+require("Utils.StateMachine")
+require("LifeBoatAPI")
+
+local GrabberStates = {
+    grabberWatchState = 0,
+    grabPipeState = 1,
+    grabberStuckState = 2,
+    positionPipeState = 3,
+}
+
+local DrillStates = {
+    drillRetractState = 0,
+    drillState = 1,
+}
 
 local gripperRailUp = false
 local gripperRailDown = false
@@ -21,27 +36,35 @@ local gripperPipeVelocity = 0
 local gripperClamp = false
 local joinerJoin = false
 
+local lockWellHead = false
+local spindleLock = false
+local spindleUp = false
+local spindleDown = false
+local slurryPump = false
+local drillSpeed = 0
+
+
 local grabPipeToggled = false
 local startDrillingToggled = false
+local abortDrillingToggled = false
 local adjustLeftToggled = false
 local adjustRightToggled = false
 local mergeButtonToggled = false
 
--- local grabPipeButton = LifeBoatAPI.LBTouchScreen:lbtouchscreen_newButton_Minimalist(0, 0, 40, 20, "grabPipe")
-
+local grabPipeButton = LifeBoatAPI.LBTouchScreen:lbtouchscreen_newButton_Minimalist(0, 0, 40, 20, "grab")
 local grabberWatch = function(s)
     gripperAngle = -1
     gripperClamp = false
     if gripperRailPosition > 0.1 then
         gripperRailDown = true
     elseif gripperRailPosition < -0.1 then
-        gripperRailDown = false
+        gripperRailUp = true
     else
         gripperRailDown = false
         gripperRailUp = false
     end
     if (grabPipeToggled) then
-        return "grabPipe"
+        return DrillStates.grabPipeState
     end
 end
 local grabberStuck = function(s)
@@ -56,99 +79,84 @@ local grabberStuck = function(s)
         gripperRailUp = false
     end
 end
-local grabPipe = function(s)
-    gripperAngle = -1
+local grabPipe = function(self)
+    gripperAngle = 1
     gripperClamp = true
-    if ticks > 60 then
+    if self.ticks > 90 then
         gripperRailUp = true
     end
     if (gripperClamped) then
-        return "positionPipe"
+        return GrabberStates.positionPipeState
     end
     if (gripperRailPosition > 2) then
-        return "grabberStuck"
+        return GrabberStates.grabberStuckState
     end
 end
 local positionPipe = function(s)
     gripperRailUp = false
     gripperRailDown = true
-    gripperAngle = 1
+    gripperAngle = -1
 
     if startDrillingToggled then
-        return "grabberWatch"
+        return GrabberStates.grabberWatchState
     end
 end
 
+local drill = function(s)
+    if abortDrillingToggled or spindleRailPosition <= -0.75 then
+        return DrillStates.drillRetractState
+    end
 
-local grabberMachine = LifeBoatAPI.LBStateMachine:new(grabberWatch)
-grabberMachine:lbstatemachine_addState("grabberWatch", grabberWatch)
-grabberMachine:lbstatemachine_addState("grabPipe", grabPipe)
-grabberMachine:lbstatemachine_addState("positionPipe", positionPipe)
-grabberMachine:lbstatemachine_addState("grabberStuck", grabberStuck)
+    spindleLock = true
+    spindleDown = true
+    if spindleClamped and wellHeadLocked then
+        slurryPump = true
+        drillSpeed = 1
+    else
+        slurryPump = false
+        drillSpeed = 0
+    end
+end
 
--- local grabberMachine = MyUtils.StateMachine:new("grabberWatch", grabberWatch)
+local drillRetract = function(s)
+    spindleLock = false
+    spindleUp = true
+    slurryPump = false
+    drillSpeed = 0
 
--- MyUtils.grabberMachine:addState("grabPipe", grabPipe)
--- MyUtils.grabberMachine:addState("positionPipe", positionPipe)
--- MyUtils.grabberMachine:addState("grabberStuck", grabberStuck)
+    if startDrillingToggled then
+        return DrillStates.drillState
+    end
+end
 
-local lockWellHead = false
+local grabberMachine = MyUtils.StateMachine:new(GrabberStates.grabberWatchState, grabberWatch)
+grabberMachine:addState(GrabberStates.grabPipeState, grabPipe)
+grabberMachine:addState(GrabberStates.positionPipeState, positionPipe)
+grabberMachine:addState(GrabberStates.grabberStuckState, grabberStuck)
+
+local drillMachine = MyUtils.StateMachine:new(DrillStates.drillRetractState, drillRetract)
+drillMachine:addState(DrillStates.drillState, drill)
+
 function onTick()
-    -- LifeBoatAPI.LBTouchScreen:lbtouchscreen_onTick()
-    isPressed1 = input.getBool(1)
-    isPressed2 = input.getBool(2)
+    LifeBoatAPI.LBTouchScreen:lbtouchscreen_onTick()
+    isPressed1, isPressed2, gripperClamped, connectorClamped, connectorAligned, spindleClamped, wellHeadLocked = getB(1,
+        2, 3, 4, 5, 6, 32)
+    screenWidth, screenHeight, input1X, input1Y, input2X, input2Y, barrelAngle, gripperRailPosition, spindleRailPosition, headWinchPosition, drillDepth, wellDepth =
+        getN(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 31, 32)
 
-    screenWidth = input.getNumber(1)
-    screenHeight = input.getNumber(2)
-
-    input1X = input.getNumber(3)
-    input1Y = input.getNumber(4)
-    input2X = input.getNumber(5)
-    input2Y = input.getNumber(6)
-
-    barrelAngle = input.getNumber(7)
-    gripperRailPosition = input.getNumber(8)
-    spindleRailPosition = input.getNumber(9)
-    headWinchPosition = input.getNumber(10)
-
-    gripperClamped = input.getBool(3)
-    connectorClamped = input.getBool(4)
-    connectorAligned = input.getBool(5)
-    spindleClamped = input.getBool(6)
-
-
-    drillDepth = input.getNumber(31)
-    wellDepth = input.getNumber(32)
-    wellHeadLocked = input.getBool(32)
-
-
-    grabberMachine:lbstatemachine_onTick()
+    grabberMachine:onTick()
 
     updateButtons()
 
-    rampNumber(gripperPipeVelocity, adjustRightToggled, adjustLeftToggled)
+    gripperPipeVelocity = rampNumber(gripperPipeVelocity, adjustRightToggled, adjustLeftToggled)
 
-    output.setBool(1, gripperRailUp)
-    output.setBool(2, gripperRailDown)
-    output.setBool(3, gripperClamp)
-    output.setBool(4, joinerJoin)
-    output.setBool(5, adjustLeftToggled)
-
-    output.setNumber(1, gripperAngle)
-    output.setNumber(2, gripperPipeVelocity)
-
-    output.setBool(31, lockWellHead)
+    outB(1, gripperRailUp, gripperRailDown, gripperClamp, joinerJoin, spindleUp, spindleDown, spindleLock, slurryPump)
+    outB(31, lockWellHead)
+    outN(1, gripperAngle, gripperPipeVelocity, drillSpeed)
 end
 
 function onDraw()
-    -- Draw the screen
-    -- screen.setColor(0, 0, 0)
-    -- screen.drawClear()
-    -- screen.setColor(255, 255, 255)
-    screen.drawText(1, 10, "Current State: " .. tostring(grabberMachine.currentState))
-    screen.drawText(1, 20, "grabPipeToggled: " .. tostring(grabPipeToggled))
-    -- screen.drawText(1, 30, "grabPipeButton: " .. tostring(grabPipeButton:lbbutton_isHeld()))
-
+    grabPipeButton:lbbutton_draw()
     drawButtons();
 end
 
@@ -216,6 +224,7 @@ function drawButtons()
     else
         if connectorAligned then
             screen.setColor(0, 255, 0)
+            screen.drawRect(95, 70, 45, 19)
             screen.drawTextBox(97, 70, 39, 19, 'join', 0, 0)
         else
             screen.setColor(96, 96, 96)
@@ -228,6 +237,7 @@ function drawButtons()
     else
         screen.setColor(96, 96, 96)
     end
+    screen.drawRect(92, 30, 39, 19)
     screen.drawTextBox(92, 30, 39, 19, 'grab', 0, 0)
 
 
@@ -257,10 +267,13 @@ end
 
 function rampNumber(value, up, down)
     if up then
-        return math.min(value + 0.01, 1)
-    elseif down then
-        return math.max(value - 0.01, -1)
-    else
-        return math.abs(value) < 0.01 and 0 or value > 0 and value - 0.01 or value + 0.01
+        value = math.min(value + 0.01, 1)
+        return value
     end
+    if down then
+        value = math.max(value - 0.01, -1)
+        return value
+    end
+    value = 0
+    return value
 end

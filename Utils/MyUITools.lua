@@ -15,56 +15,109 @@ sC = screen.setColor
 
 function inRect(x, y, a, b, w, h) return x > a and y > b and x < a + w and y < b + h end
 
+---@section Black
 function Black() sC(0, 0, 0) end
 
+---@endsection
+---@section White
 function White() sC(255, 255, 255) end
 
+---@endsection
+
+---@section Red
 function Red() sC(255, 0, 0) end
 
+---@endsection
+
+---@section Lime
 function Lime() sC(0, 255, 0) end
 
+---@endsection
+
+---@section Blue
 function Blue() sC(0, 0, 255) end
 
+---@endsection
+
+---@section Yellow
 function Yellow() sC(255, 255, 0) end
 
+---@endsection
+
+---@section Cyan
 function Cyan() sC(0, 255, 255) end
 
+---@endsection
+
+---@section Magenta
 function Magenta() sC(255, 0, 255) end
 
+---@endsection
+
+---@section Silver
 function Silver() sC(192, 192, 192) end
 
+---@endsection
+
+---@section Gray
 function Gray() sC(128, 128, 128) end
 
+---@endsection
+
+---@section DarkGray
 function DarkGray() sC(32, 32, 32) end
 
+---@endsection
+
+---@section Maroon
 function Maroon() sC(128, 0, 0) end
 
+---@endsection
+
+---@section Olive
 function Olive() sC(128, 128, 0) end
 
+---@endsection
+
+---@section Green
 function Green() sC(0, 128, 0) end
 
+---@endsection
+
+---@section Purple
 function Purple() sC(128, 0, 128) end
 
+---@endsection
+
+---@section Teal
 function Teal() sC(0, 128, 128) end
 
+---@endsection
+
+---@section Navy
 function Navy() sC(0, 0, 128) end
 
+---@endsection
+
+---@section Brown
 function Brown() sC(165, 42, 42) end
+
+---@endsection
 
 backgroundColor = nil -- screen backgroundColor
 
 baseStyle = {
-	bg = Gray, -- background color
-	fg = Brown, -- foreground color
-	p = Red, -- pressed color
-	tg = Blue, -- toggled color
-	bdr = Maroon, -- border color
+	bg = Gray,      -- background color
+	fg = Brown,     -- foreground color
+	p = Red,        -- pressed color
+	tg = Blue,      -- toggled color
+	bdr = Maroon,   -- border color
 	drawBorder = true, -- draw the border?
-	drawBG = true, -- draw the border?
-	ha = 0, -- horizontal text alignment
-	va = 0, -- vertical text alignment
-	txo = 0, -- text X offset
-	tyo = 0, -- text Y offset
+	drawBG = true,  -- draw the border?
+	ha = 0,         -- horizontal text alignment
+	va = 0,         -- vertical text alignment
+	txo = 0,        -- text X offset
+	tyo = 0,        -- text Y offset
 }
 
 function getRect(b, f)
@@ -95,7 +148,7 @@ function addElement(e)
 
 	if e.st == nil then
 		e.st = baseStyle
-		else
+	else
 		for k, v in pairs(baseStyle) do
 			if e.st[k] == nil then
 				e.st[k] = v
@@ -128,7 +181,8 @@ function clickB(b) if b.cf then b:cf() end end
 
 function toggleB(b) if b.tg ~= nil then b.tg = not b.tg end end
 
-function radioB(b) if b.ri ~= nil then
+function radioB(b)
+	if b.ri ~= nil then
 		for _, b2 in pairs(elements) do
 			if b2.ri == b.ri and b2.rt then
 				b2.rt = false
@@ -187,7 +241,7 @@ function drawUI()
 			s.bg()
 		end
 		local r = getRect(b)
-		if s.drawBG then 
+		if s.drawBG then
 			dRF(tU(r, 1, 4))
 		end
 		if b.fillHeight ~= nil or b.fillWidth ~= nil then

@@ -1,8 +1,18 @@
 {
   "lifeboatapi.stormworks.isMicrocontrollerProject": true,
   "lifeboatapi.stormworks.isAddonProject": false,
-  "Lua.diagnostics.disable": ["lowercase-global", "undefined-doc-name"],
-  "Lua.diagnostics.globals": ["__simulator", "print", "simulator", "screen"],
+  "Lua.diagnostics.disable": [
+    "lowercase-global",
+    "undefined-doc-name",
+    "undefined-field"
+  ],
+  "Lua.diagnostics.globals": [
+    "__simulator",
+    "print",
+    "simulator",
+    "screen",
+    "drillState"
+  ],
   "Lua.runtime.version": "Lua 5.3",
   "Lua.runtime.builtin": {
     "coroutine": "enable",
