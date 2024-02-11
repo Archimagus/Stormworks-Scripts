@@ -1,0 +1,18 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Check and Start StormworksLuaExtract",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "$process = Get-Process -Name 'StormworksLuaExtract' -ErrorAction SilentlyContinue; if (!$process) { Start-Process -FilePath 'd:\\repos\\Stormworks\\StormworksLuaExtract.exe' }"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    }
+  ]
+}

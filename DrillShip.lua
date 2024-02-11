@@ -1,10 +1,10 @@
+-- DrillShip.lua
 -- Author: Archimagus
 -- GitHub: <GithubLink>
 -- Workshop: <WorkshopLink>
 --
 --- Developed using LifeBoatAPI - Stormworks Lua plugin for VSCode - https://code.visualstudio.com/download (search "Stormworks Lua with LifeboatAPI" extension)
 --- If you have any issues, please report them here: https://github.com/nameouschangey/STORMWORKS_VSCodeExtension/issues - by Nameous Changey
-
 
 --[====[ HOTKEYS ]====]
 -- Press F7 to build the project, copy the output from /_build/out/ into the game to use
@@ -17,16 +17,16 @@ require("Utils.MyIoUtils")
 require("Utils.StateMachine")
 require("LifeBoatAPI")
 
-local GrabberStates = {
-    grabberWatchState = 0,
-    grabPipeState = 1,
-    grabberStuckState = 2,
-    positionPipeState = 3,
+GrabberStates = {
+    grabberWatchState = 'gw',
+    grabPipeState = 'gp',
+    grabberStuckState = 'gs',
+    positionPipeState = 'pp',
 }
 
-local DrillStates = {
-    drillRetractState = 0,
-    drillState = 1,
+DrillStates = {
+    drillRetractState = 'dr',
+    drillState = 'd',
 }
 
 local gripperRailUp = false
@@ -64,7 +64,7 @@ local grabberWatch = function(s)
         gripperRailUp = false
     end
     if (grabPipeToggled) then
-        return DrillStates.grabPipeState
+        return GrabberStates.grabPipeState
     end
 end
 local grabberStuck = function(s)
@@ -73,7 +73,7 @@ local grabberStuck = function(s)
     if gripperRailPosition > 0.1 then
         gripperRailDown = true
     elseif gripperRailPosition < -0.1 then
-        gripperRailDown = false
+        gripperRailUp = false
     else
         gripperRailDown = false
         gripperRailUp = false
@@ -109,6 +109,7 @@ local drill = function(s)
 
     spindleLock = true
     spindleDown = true
+    spindleUp = false
     if spindleClamped and wellHeadLocked then
         slurryPump = true
         drillSpeed = 1
@@ -121,6 +122,7 @@ end
 local drillRetract = function(s)
     spindleLock = false
     spindleUp = true
+    spindleDown = false
     slurryPump = false
     drillSpeed = 0
 
@@ -145,6 +147,7 @@ function onTick()
         getN(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 31, 32)
 
     grabberMachine:onTick()
+    drillMachine:onTick()
 
     updateButtons()
 
@@ -156,6 +159,8 @@ function onTick()
 end
 
 function onDraw()
+    screen.setColor(0, 0, 0)
+    screen.drawRectF(0, 0, 64, 160)
     grabPipeButton:lbbutton_draw()
     drawButtons();
 end

@@ -16,15 +16,15 @@ MyUtils.StateMachine = {
 		)
 	end,
 
-	addState = function(self, stateName, stateFunction)
-		self.states[stateName] = stateFunction
+	addState = function(self, stateId, stateFunction)
+		self.states[stateId] = stateFunction
 	end,
 
 	onTick = function(self)
 		self._stateFunc = self.states[self.currentState]
 		local nextState = self._stateFunc(self)
 		self.ticks = self.ticks + 1
-		if nextState then
+		if nextState ~= nil then
 			self.currentState = nextState
 			self.ticks = 0
 		end
