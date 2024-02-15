@@ -15,6 +15,7 @@
 
 require("Utils.MyIoUtils")
 require("Utils.StateMachine")
+require("Utils.MyUITools")
 require("LifeBoatAPI")
 
 GrabberStates = {
@@ -29,57 +30,86 @@ DrillStates = {
     drillState = 'd',
 }
 
-local gripperRailUp = false
-local gripperRailDown = false
-local gripperAngle = 1
-local gripperPipeVelocity = 0
-local gripperClamp = false
-local joinerJoin = false
+gripperRailUp = false
+gripperRailDown = false
+gripperAngle = 1
+gripperPipeVelocity = 0
+joinerPipeVelocity = 0
+gripperClamp = false
 
-local lockWellHead = false
-local spindleLock = false
-local spindleUp = false
-local spindleDown = false
-local slurryPump = false
-local drillSpeed = 0
+lockWellHead = false
+spindleLock = false
+spindleUp = false
+spindleDown = false
+slurryPump = false
+drillSpeed = 0
+barrelIndex = 0
 
+drillButton = addElement({ x = 0, y = 0, w = 4, t = "Drill", tg = false })
+grabPipeButton = addElement({ x = 5, y = 3, w = 4, t = "Grab", p = false })
+adjustGripperLeftButton = addElement({ x = 9, y = 6, w = 1, t = "<", p = false })
+adjustGripperRightButton = addElement({ x = 10, y = 6, w = 1, t = ">", p = false })
+mergeButton = addElement({ x = 5, y = 6, w = 4, t = "Join", p = false, st = { drawBG = 1 } })
+adjustJoinerLeftButton = addElement({ x = 3, y = 6, w = 1, t = "<", p = false })
+adjustJoinerRightButton = addElement({ x = 4, y = 6, w = 1, t = ">", p = false })
 
-local grabPipeToggled = false
-local startDrillingToggled = false
-local abortDrillingToggled = false
-local adjustLeftToggled = false
-local adjustRightToggled = false
-local mergeButtonToggled = false
+bitIndexLabel = addElement({ x = 3, y = 1, w = 4, t = "Bit:0", st = { drawBorder = 0, drawBG = 0 } })
 
-local grabPipeButton = LifeBoatAPI.LBTouchScreen:lbtouchscreen_newButton_Minimalist(0, 0, 40, 20, "grab")
-local grabberWatch = function(s)
+addElement({
+    x = 1,
+    y = 1,
+    w = 1,
+    t = ">",
+    p = false,
+    cf = function()
+        barrelIndex = (barrelIndex + 1) % 36
+        bitIndexLabel.t = "Bit:" .. tostring(barrelIndex)
+    end
+})
+addElement({
+    x = 0,
+    y = 1,
+    w = 1,
+    t = "<",
+    p = false,
+    cf = function()
+        barrelIndex = barrelIndex - 1
+        if barrelIndex < 0 then
+            barrelIndex = 35
+        end
+        bitIndexLabel.t = "Bit:" .. tostring(barrelIndex)
+    end
+})
+
+grabberWatch = function(s)
     gripperAngle = -1
     gripperClamp = false
+    gripperRailDown = false
+    gripperRailUp = false
     if gripperRailPosition > 0.1 then
         gripperRailDown = true
     elseif gripperRailPosition < -0.1 then
         gripperRailUp = true
-    else
-        gripperRailDown = false
-        gripperRailUp = false
     end
-    if (grabPipeToggled) then
+    if (grabPipeButton.p) then
         return GrabberStates.grabPipeState
     end
 end
-local grabberStuck = function(s)
+grabberStuck = function(s)
     gripperAngle = 1
     gripperClamp = false
+    gripperRailDown = false
+    gripperRailUp = false
     if gripperRailPosition > 0.1 then
         gripperRailDown = true
     elseif gripperRailPosition < -0.1 then
         gripperRailUp = false
-    else
-        gripperRailDown = false
-        gripperRailUp = false
+    end
+    if grabPipeButton.p then
+        return GrabberStates.grabPipeState
     end
 end
-local grabPipe = function(self)
+grabPipe = function(self)
     gripperAngle = 1
     gripperClamp = true
     if self.ticks > 90 then
@@ -88,22 +118,25 @@ local grabPipe = function(self)
     if (gripperClamped) then
         return GrabberStates.positionPipeState
     end
-    if (gripperRailPosition > 2) then
+    if (gripperRailPosition > 0.49 or self.ticks > 200) then
         return GrabberStates.grabberStuckState
     end
 end
-local positionPipe = function(s)
+positionPipe = function(s)
     gripperRailUp = false
     gripperRailDown = true
     gripperAngle = -1
-
-    if startDrillingToggled then
+    mergeButton.t = connectorAligned and "Join" or ""
+    mergeButton.st.drawBG = connectorAligned and 2 or 0
+    if drillButton.p then
         return GrabberStates.grabberWatchState
     end
 end
 
-local drill = function(s)
-    if abortDrillingToggled or spindleRailPosition <= -0.75 then
+drill = function(s)
+    if not drillButton.tg or spindleRailPosition <= -0.183 then
+        drillButton.t = "Drill"
+        drillButton.tg = false
         return DrillStates.drillRetractState
     end
 
@@ -119,155 +152,52 @@ local drill = function(s)
     end
 end
 
-local drillRetract = function(s)
+drillRetract = function(s)
     spindleLock = false
     spindleUp = true
     spindleDown = false
     slurryPump = false
     drillSpeed = 0
 
-    if startDrillingToggled then
+    if drillButton.tg then
+        drillButton.t = "Retract"
         return DrillStates.drillState
     end
 end
 
-local grabberMachine = MyUtils.StateMachine:new(GrabberStates.grabberWatchState, grabberWatch)
+grabberMachine = MyUtils.StateMachine:new(GrabberStates.grabberWatchState, grabberWatch)
 grabberMachine:addState(GrabberStates.grabPipeState, grabPipe)
 grabberMachine:addState(GrabberStates.positionPipeState, positionPipe)
 grabberMachine:addState(GrabberStates.grabberStuckState, grabberStuck)
 
-local drillMachine = MyUtils.StateMachine:new(DrillStates.drillRetractState, drillRetract)
+drillMachine = MyUtils.StateMachine:new(DrillStates.drillRetractState, drillRetract)
 drillMachine:addState(DrillStates.drillState, drill)
 
 function onTick()
-    LifeBoatAPI.LBTouchScreen:lbtouchscreen_onTick()
     isPressed1, isPressed2, gripperClamped, connectorClamped, connectorAligned, spindleClamped, wellHeadLocked = getB(1,
         2, 3, 4, 5, 6, 32)
     screenWidth, screenHeight, input1X, input1Y, input2X, input2Y, barrelAngle, gripperRailPosition, spindleRailPosition, headWinchPosition, drillDepth, wellDepth =
         getN(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 31, 32)
 
+    tickUI()
+
     grabberMachine:onTick()
     drillMachine:onTick()
 
-    updateButtons()
+    gripperPipeVelocity = rampNumber(gripperPipeVelocity, adjustGripperRightButton.p, adjustGripperLeftButton.p)
+    joinerPipeVelocity = rampNumber(joinerPipeVelocity, adjustJoinerRightButton.p, adjustJoinerLeftButton.b)
 
-    gripperPipeVelocity = rampNumber(gripperPipeVelocity, adjustRightToggled, adjustLeftToggled)
+    barrelTarget = barrelIndex / 36;
+    barrelVelocity = (barrelTarget - barrelAngle) * 10;
 
-    outB(1, gripperRailUp, gripperRailDown, gripperClamp, joinerJoin, spindleUp, spindleDown, spindleLock, slurryPump)
+    outB(1, gripperRailUp, gripperRailDown, gripperClamp, mergeButton.p, spindleUp, spindleDown, spindleLock,
+        slurryPump)
     outB(31, lockWellHead)
-    outN(1, gripperAngle, gripperPipeVelocity, drillSpeed)
+    outN(1, gripperAngle, gripperPipeVelocity, joinerPipeVelocity, drillSpeed, barrelVelocity, joinerPipeVelocity)
 end
 
 function onDraw()
-    screen.setColor(0, 0, 0)
-    screen.drawRectF(0, 0, 64, 160)
-    grabPipeButton:lbbutton_draw()
-    drawButtons();
-end
-
-function updateButtons()
-    if (isPressed1 and isInRect(43, 56, 12, 18, input1X, input1Y)) then
-        adjustLeftToggled = true
-    else
-        adjustLeftToggled = false
-    end
-
-    if (isPressed1 and isInRect(63, 55, 16, 19, input1X, input1Y)) then
-        adjustRightToggled = true
-    else
-        adjustRightToggled = false
-    end
-
-    if (connectorAligned and isPressed1 and isInRect(92, 70, 39, 19, input1X, input1Y)) then
-        mergeButtonToggled = true
-    else
-        mergeButtonToggled = false
-    end
-
-    if (isPressed1 and isInRect(92, 30, 39, 19, input1X, input1Y)) then
-        grabPipeToggled = true
-    else
-        grabPipeToggled = false
-    end
-
-    if (isPressed1 and isInRect(92, 10, 39, 19, input1X, input1Y)) then
-        startDrillingToggled = true
-    else
-        startDrillingToggled = false
-    end
-end
-
-function drawButtons()
-    if adjustLeftToggled then
-        screen.setColor(13, 34, 39)
-    else
-        screen.setColor(73, 45, 0)
-    end
-    cx = 49
-    cy = 65
-    angle = -1.58
-    p1 = rotatePoint(cx, cy, angle, 43, 74)
-    p2 = rotatePoint(cx, cy, angle, 49, 56)
-    p3 = rotatePoint(cx, cy, angle, 55, 74)
-    screen.drawTriangleF(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)
-
-    if adjustRightToggled then
-        screen.setColor(13, 34, 39)
-    else
-        screen.setColor(73, 45, 0)
-    end
-    cx = 71
-    cy = 64.5
-    angle = 1.57
-    p1 = rotatePoint(cx, cy, angle, 63, 74)
-    p2 = rotatePoint(cx, cy, angle, 71, 55)
-    p3 = rotatePoint(cx, cy, angle, 79, 74)
-    screen.drawTriangleF(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)
-
-    if mergeButtonToggled then
-        screen.setColor(255, 255, 255)
-    else
-        if connectorAligned then
-            screen.setColor(0, 255, 0)
-            screen.drawRect(95, 70, 45, 19)
-            screen.drawTextBox(97, 70, 39, 19, 'join', 0, 0)
-        else
-            screen.setColor(96, 96, 96)
-            screen.drawRect(95, 70, 45, 19)
-        end
-    end
-
-    if grabPipeToggled then
-        screen.setColor(255, 255, 255)
-    else
-        screen.setColor(96, 96, 96)
-    end
-    screen.drawRect(92, 30, 39, 19)
-    screen.drawTextBox(92, 30, 39, 19, 'grab', 0, 0)
-
-
-    if startDrillingToggled then
-        screen.setColor(255, 255, 255)
-    else
-        screen.setColor(96, 96, 96)
-    end
-    screen.drawTextBox(92, 10, 39, 19, 'drill', 0, 0)
-end
-
-function isInRect(x, y, w, h, px, py)
-    return px >= x and px <= x + w and py >= y and py <= y + h
-end
-
-function rotatePoint(cx, cy, angle, px, py)
-    s = math.sin(angle)
-    c = math.cos(angle)
-    px = px - cx
-    py = py - cy
-    xnew = px * c - py * s
-    ynew = px * s + py * c
-    px = xnew + cx
-    py = ynew + cy
-    return { x = px, y = py }
+    drawUI()
 end
 
 function rampNumber(value, up, down)

@@ -29,7 +29,6 @@ do
 	---@param simulator Simulator Use simulator:<function>() to set inputs etc.
 	---@param ticks     number Number of ticks since simulator started
 	function onLBSimulatorTick(simulator, ticks)
-
 		-- touchscreen defaults
 		local screenConnection = simulator:getTouchScreen(1)
 		simulator:setInputBool(1, screenConnection.isTouched)
@@ -57,12 +56,12 @@ end
 require("Utils.MyUITools")
 require("Utils.MyIoUtils")
 
-gridX=11
-gridY=7
-baseStyle.bg = DarkGray
-baseStyle.fg = Black
-baseStyle.drawBorder=false
-baseStyle.va =0
+gridX = 11
+gridY = 7
+baseStyle.bg = Arch_DarkGray
+baseStyle.fg = Arch_Black
+baseStyle.drawBorder = false
+baseStyle.va = 0
 baseStyle.txo = 1
 baseStyle.tyo = 0
 
@@ -71,33 +70,39 @@ if selectedSignal == 0 then selectedSignal = 1 end
 inputs = propB("Input 1", "Input 2", "Input 3", "Input 4")
 useButtons = prB("Use Buttons")
 
-validSignals={}
-signalIndex=0
+validSignals = {}
+signalIndex = 0
 for k, v in ipairs(inputs) do
 	if v then
-		table.insert(validSignals,k)
+		table.insert(validSignals, k)
 		local index = #validSignals
 		selected = k == selectedSignal
 		if selected then signalIndex = index end
 		if useButtons then
-			addElement({ x = (index*1.1)-0.9, y = 0.5, w = 1, t = tostring(k), ri = 1, rt=selected,
+			addElement({
+				x = (index * 1.1) - 0.9,
+				y = 0.5,
+				w = 1,
+				t = tostring(k),
+				ri = 1,
+				rt = selected,
 				cf = function(b) if b.rt then selectedSignal = k end end
 			})
 		end
 	end
 end
 if not useButtons then
-	ss = addElement({ x = 0, y = 0, w = 1, st={drawBG=false, fg=Green}, t = tostring(selectedSignal) })
+	ss = addElement({ x = 0, y = 0, w = 1, st = { drawBG = false, fg = Green }, t = tostring(selectedSignal) })
 end
 
 
 function onTick()
 	tickUI()
 	if not useButtons and touchedThisFrame then
-		signalIndex = signalIndex+1
+		signalIndex = signalIndex + 1
 		if signalIndex > #validSignals then signalIndex = 1 end
 		selectedSignal = validSignals[signalIndex]
-		ss.t=tostring(selectedSignal)
+		ss.t = tostring(selectedSignal)
 	end
 	outN(1, selectedSignal)
 end

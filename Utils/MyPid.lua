@@ -21,7 +21,7 @@ MyUtils.PID = {
 	---@param bias number fixed offset to apply to the output
 	---@param minOutput number min value of the output, if the output would be outside this value it prevents the integral from winding
 	---@param maxOutput number max value of the output, if the output would be outside this value it prevents the integral from winding
-	--- @return PID A new instance of a PID
+	---@return PID
 	new = function(self, p, i, d, bias, minOutput, maxOutput)
 		local newObj =
 		{

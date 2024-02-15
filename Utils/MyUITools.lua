@@ -1,125 +1,152 @@
----@section MyUITools
 require("Utils.MyIoUtils")
 
+drawTextBox = screen.drawTextBox
+drawRect = screen.drawRect
+drawFilledRect = screen.drawRectF
+print = print or LifeBoatAPI.lb_doNothing
+
+---@section setColor
+---@param color table {r, g, b, a|nil}
+function setColor(color)
+	color[4] = color[4] or 255
+	screen.setColor(tU(color, 1, 4))
+end
+
+---@endsection
+
+---@section inRect
+function inRect(x, y, a, b, w, h) return x > a and y > b and x < a + w and y < b + h end
+
+---@endsection
+
+---@section Arch_Black
+Arch_Black = { 0, 0, 0 }
+
+---@endsection
+---@section Arch_White
+Arch_White = { 255, 255, 255 }
+
+---@endsection
+
+---@section Arch_Red
+Arch_Red = { 255, 0, 0 }
+
+---@endsection
+
+---@section Arch_Lime
+Arch_Lime = { 0, 255, 0 }
+
+---@endsection
+
+---@section Arch_Blue
+Arch_Blue = { 0, 0, 255 }
+
+---@endsection
+
+---@section Arch_Yellow
+Arch_Yellow = { 255, 255, 0 }
+
+---@endsection
+
+---@section Arch_Cyan
+Arch_Cyan = { 0, 255, 255 }
+
+---@endsection
+
+---@section Arch_Magenta
+Arch_Magenta = { 255, 0, 255 }
+
+---@endsection
+
+---@section Arch_Silver
+Arch_Silver = { 192, 192, 192 }
+
+---@endsection
+
+---@section Arch_Gray
+Arch_Gray = { 128, 128, 128 }
+
+---@endsection
+
+---@section Arch_DarkGray
+Arch_DarkGray = { 32, 32, 32 }
+
+---@endsection
+
+---@section Arch_Maroon
+Arch_Maroon = { 128, 0, 0 }
+
+---@endsection
+
+---@section Arch_Olive
+Arch_Olive = { 128, 128, 0 }
+
+---@endsection
+
+---@section Arch_Green
+Arch_Green = { 0, 128, 0 }
+
+---@endsection
+
+---@section Arch_Purple
+Arch_Purple = { 128, 0, 128 }
+
+---@endsection
+
+---@section Arch_Teal
+Arch_Teal = { 0, 128, 128 }
+
+---@endsection
+
+---@section Arch_Navy
+Arch_Navy = { 0, 0, 128 }
+
+---@endsection
+
+---@section Arch_Brown
+Arch_Brown = { 165, 42, 42 }
+
+---@endsection
+
+
+---@section baseStyle
 w = 0
 h = 0
 gridX = 12
 gridY = 12
 gridXSpace = 0
 gridYSpace = 0
-
-dTB = screen.drawTextBox
-dR = screen.drawRect
-dRF = screen.drawRectF
-sC = screen.setColor
-
-function inRect(x, y, a, b, w, h) return x > a and y > b and x < a + w and y < b + h end
-
----@section Black
-function Black() sC(0, 0, 0) end
-
----@endsection
----@section White
-function White() sC(255, 255, 255) end
-
----@endsection
-
----@section Red
-function Red() sC(255, 0, 0) end
-
----@endsection
-
----@section Lime
-function Lime() sC(0, 255, 0) end
-
----@endsection
-
----@section Blue
-function Blue() sC(0, 0, 255) end
-
----@endsection
-
----@section Yellow
-function Yellow() sC(255, 255, 0) end
-
----@endsection
-
----@section Cyan
-function Cyan() sC(0, 255, 255) end
-
----@endsection
-
----@section Magenta
-function Magenta() sC(255, 0, 255) end
-
----@endsection
-
----@section Silver
-function Silver() sC(192, 192, 192) end
-
----@endsection
-
----@section Gray
-function Gray() sC(128, 128, 128) end
-
----@endsection
-
----@section DarkGray
-function DarkGray() sC(32, 32, 32) end
-
----@endsection
-
----@section Maroon
-function Maroon() sC(128, 0, 0) end
-
----@endsection
-
----@section Olive
-function Olive() sC(128, 128, 0) end
-
----@endsection
-
----@section Green
-function Green() sC(0, 128, 0) end
-
----@endsection
-
----@section Purple
-function Purple() sC(128, 0, 128) end
-
----@endsection
-
----@section Teal
-function Teal() sC(0, 128, 128) end
-
----@endsection
-
----@section Navy
-function Navy() sC(0, 0, 128) end
-
----@endsection
-
----@section Brown
-function Brown() sC(165, 42, 42) end
-
----@endsection
-
 backgroundColor = nil -- screen backgroundColor
 
-baseStyle = {
-	bg = Gray,      -- background color
-	fg = Brown,     -- foreground color
-	p = Red,        -- pressed color
-	tg = Blue,      -- toggled color
-	bdr = Maroon,   -- border color
-	drawBorder = true, -- draw the border?
-	drawBG = true,  -- draw the border?
-	ha = 0,         -- horizontal text alignment
-	va = 0,         -- vertical text alignment
-	txo = 0,        -- text X offset
-	tyo = 0,        -- text Y offset
-}
+---@class baseStyle
+---@field bg table {r,g,b} background color
+---@field fg function foreground color function
+---@field p function pressed color function
+---@field tg function toggled color function
+---@field bdr function border color function
+---@field drawBorder number draw the background? 0 never, 1 on press, 2 always
+---@field drawBG number draw the background? 0 never, 1 on press, 2 always
+---@field ha number horizontal text alignment
+---@field va number vertical text alignment
+---@field txo number text X offset
+---@field tyo number text Y offset
 
+baseStyle = {
+	bg = Arch_Black,
+	fg = Arch_White,
+	p = Arch_DarkGray,
+	tg = Arch_Green,
+	bdr = Arch_White,
+	drawBorder = 2,
+	drawBG = 2,
+	ha = 0,
+	va = 0,
+	txo = 0,
+	tyo = 0,
+}
+---@endsection
+
+---@section getRect
 function getRect(b, f)
 	local r = { b.x * (gridX + gridXSpace), b.y * (gridY + gridYSpace), b.w * gridX, b.h * gridY }
 	if f then
@@ -129,37 +156,54 @@ function getRect(b, f)
 	return r
 end
 
+---@endsection
+
+---@section addElement
+elements = {}
+
+---@class MyElement
+---@field x number x position in grid
+---@field y number y position in grid
+---@field w number width in grid cells
+---@field h number height in grid cells
+---@field t string text
+---@field st baseStyle style override
+---@field p boolean|nil pressed state (if nil, not a clickable element)
+---@field tg boolean|nil current toggle state (if nil, not a toggle button)
+---@field ri number|nil radio button index (if nil, not a radio button)
+---@field rt boolean|nil radio toggled initial state (if nil, not a radio button)
+---@field cf function|nil click function (if not nil will be clickable and called on click)
+---@field hf function|nil optional hold function (if not nil will be clickable and called while held)
+---@field uf function|nil optional update function (if not nil will be called every frame)
+
+---@function addElement
+---@param e table
+---@return MyElement
 function addElement(e)
 	e.x = e.x or 0
 	e.y = e.y or 0
 	e.w = e.w or 1
 	e.h = e.h or 1
 	e.t = e.t or ""
-	-- style override
+	--e.st style override
 	--e.tg  make button toggle
 	--e.ri  radio button index
 	--e.rt  radio toggled initial state
 	--e.cf  click funtion
 	--e.hf  hold funtion
 	--e.uf  update function
-	if e.tg ~= nil or e.cf ~= nil or e.hf ~= nil or e.ri ~= nil then
+	if e.tg ~= nil or e.cf or e.hf or e.ri then
 		e.p = false -- make this a clickable element if any of the above are defined
 	end
 
-	if e.st == nil then
-		e.st = baseStyle
-	else
-		for k, v in pairs(baseStyle) do
-			if e.st[k] == nil then
-				e.st[k] = v
-			end
-		end
-	end
+	e.st = LifeBoatAPI.lb_copy(baseStyle, e.st or {})
+
 	tI(elements, e)
 	return e
 end
 
-elements = {}
+---@endsection
+
 
 -- ADD ELEMENTS HERE
 -- time=0
@@ -177,6 +221,7 @@ elements = {}
 -- })
 -- addElement({x=1, y=5, w=4,t="label"})
 
+---@section clickB
 function clickB(b) if b.cf then b:cf() end end
 
 function toggleB(b) if b.tg ~= nil then b.tg = not b.tg end end
@@ -193,6 +238,9 @@ function radioB(b)
 	end
 end
 
+---@endsection
+
+---@section tickUI
 isTouched = false
 touchedThisFrame = false
 releasedThisFrame = false
@@ -213,7 +261,7 @@ function tickUI()
 				end
 				b.p = isTouched
 			end
-			if not isTouched and b.p then
+			if not isTouched then
 				b.p = false
 			end
 			if b.p and b.hf then
@@ -226,28 +274,32 @@ function tickUI()
 	end
 end
 
+---@endsection
+
+---@section drawUI
 function drawUI()
 	if backgroundColor ~= nil then
 		backgroundColor()
-		dRF(0, 0, screen.getWidth(), screen.getHeight())
+		drawFilledRect(0, 0, screen.getWidth(), screen.getHeight())
 	end
+
 	for k, b in pairs(elements) do
 		local s = b.st;
 		if b.p then
-			s.p()
+			setColor(s.p)
 		elseif b.tg or b.rt then
-			s.tg()
+			setColor(s.tg)
 		else
-			s.bg()
+			setColor(s.bg)
 		end
 		local r = getRect(b)
-		if s.drawBG then
-			dRF(tU(r, 1, 4))
+		if s.drawBG == 2 or (s.drawBG == 1 and (b.p or b.tg or b.rt)) then
+			drawFilledRect(tU(r, 1, 4))
 		end
 		if b.fillHeight ~= nil or b.fillWidth ~= nil then
 			local fr = getRect(b, true)
-			s.tg()
-			dRF(tU(fr, 1, 4))
+			setColor(s.tg)
+			drawFilledRect(tU(fr, 1, 4))
 		end
 		local txt = { tU(r) }
 		txt[1] = txt[1] + s.txo
@@ -255,11 +307,11 @@ function drawUI()
 		tI(txt, b.t)
 		tI(txt, s.ha)
 		tI(txt, s.va)
-		s.fg()
-		dTB(tU(txt, 1, 7))
+		setColor(s.fg)
+		drawTextBox(tU(txt, 1, 7))
 		if s.drawBorder then
-			s.bdr()
-			dR(tU(r, 1, 4))
+			setColor(s.bdr)
+			drawRect(tU(r, 1, 4))
 		end
 	end
 end

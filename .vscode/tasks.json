@@ -9,6 +9,9 @@
         "-Command",
         "$process = Get-Process -Name 'StormworksLuaExtract' -ErrorAction SilentlyContinue; if (!$process) { Start-Process -FilePath 'd:\\repos\\Stormworks\\StormworksLuaExtract.exe' }"
       ],
+      "options": {
+        "cwd": "${workspaceFolder}/../"
+      },
       "group": {
         "kind": "build",
         "isDefault": false
