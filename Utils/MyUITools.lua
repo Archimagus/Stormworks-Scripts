@@ -1,17 +1,17 @@
+---@diagnostic disable: duplicate-doc-field
 require("Utils.MyIoUtils")
 
 drawTextBox = screen.drawTextBox
 drawRect = screen.drawRect
 drawFilledRect = screen.drawRectF
-print = print or LifeBoatAPI.lb_doNothing
-
----@section setColor
----@param color table {r, g, b, a|nil}
-function setColor(color)
-	color[4] = color[4] or 255
-	screen.setColor(tU(color, 1, 4))
+-- sC = screen.setColor
+sC = function(r, g, b)
+	screen.setColor(r, g, b)
 end
 
+
+---@section print
+print = print or LifeBoatAPI.lb_doNothing
 ---@endsection
 
 ---@section inRect
@@ -19,92 +19,92 @@ function inRect(x, y, a, b, w, h) return x > a and y > b and x < a + w and y < b
 
 ---@endsection
 
----@section Arch_Black
-Arch_Black = { 0, 0, 0 }
+---@section ArchBlack
+function ArchBlack() sC(0, 0, 0) end
 
 ---@endsection
----@section Arch_White
-Arch_White = { 255, 255, 255 }
-
----@endsection
-
----@section Arch_Red
-Arch_Red = { 255, 0, 0 }
+---@section ArchWhite
+function ArchWhite() sC(255, 255, 255) end
 
 ---@endsection
 
----@section Arch_Lime
-Arch_Lime = { 0, 255, 0 }
+---@section ArchRed
+function ArchRed() sC(255, 0, 0) end
 
 ---@endsection
 
----@section Arch_Blue
-Arch_Blue = { 0, 0, 255 }
+---@section ArchLime
+function ArchLime() sC(0, 255, 0) end
 
 ---@endsection
 
----@section Arch_Yellow
-Arch_Yellow = { 255, 255, 0 }
+---@section ArchBlue
+function ArchBlue() sC(0, 0, 255) end
 
 ---@endsection
 
----@section Arch_Cyan
-Arch_Cyan = { 0, 255, 255 }
+---@section ArchYellow
+function ArchYellow() sC(255, 255, 0) end
 
 ---@endsection
 
----@section Arch_Magenta
-Arch_Magenta = { 255, 0, 255 }
+---@section ArchCyan
+function ArchCyan() sC(0, 255, 255) end
 
 ---@endsection
 
----@section Arch_Silver
-Arch_Silver = { 192, 192, 192 }
+---@section ArchMagenta
+function ArchMagenta() sC(255, 0, 255) end
 
 ---@endsection
 
----@section Arch_Gray
-Arch_Gray = { 128, 128, 128 }
+---@section ArchSilver
+function ArchSilver() sC(192, 192, 192) end
 
 ---@endsection
 
----@section Arch_DarkGray
-Arch_DarkGray = { 32, 32, 32 }
+---@section ArchGray
+function ArchGray() sC(128, 128, 128) end
 
 ---@endsection
 
----@section Arch_Maroon
-Arch_Maroon = { 128, 0, 0 }
+---@section ArchDarkGray
+function ArchDarkGray() sC(32, 32, 32) end
 
 ---@endsection
 
----@section Arch_Olive
-Arch_Olive = { 128, 128, 0 }
+---@section ArchMaroon
+function ArchMaroon() sC(128, 0, 0) end
 
 ---@endsection
 
----@section Arch_Green
-Arch_Green = { 0, 128, 0 }
+---@section ArchOlive
+function ArchOlive() sC(128, 128, 0) end
 
 ---@endsection
 
----@section Arch_Purple
-Arch_Purple = { 128, 0, 128 }
+---@section ArchGreen
+function ArchGreen() sC(0, 128, 0) end
 
 ---@endsection
 
----@section Arch_Teal
-Arch_Teal = { 0, 128, 128 }
+---@section ArchPurple
+function ArchPurple() sC(128, 0, 128) end
 
 ---@endsection
 
----@section Arch_Navy
-Arch_Navy = { 0, 0, 128 }
+---@section ArchTeal
+function ArchTeal() sC(0, 128, 128) end
 
 ---@endsection
 
----@section Arch_Brown
-Arch_Brown = { 165, 42, 42 }
+---@section ArchNavy
+function ArchNavy() sC(0, 0, 128) end
+
+---@endsection
+
+---@section ArchBrown
+function ArchBrown() sC(165, 42, 42) end
 
 ---@endsection
 
@@ -132,11 +132,11 @@ backgroundColor = nil -- screen backgroundColor
 ---@field tyo number text Y offset
 
 baseStyle = {
-	bg = Arch_Black,
-	fg = Arch_White,
-	p = Arch_DarkGray,
-	tg = Arch_Green,
-	bdr = Arch_White,
+	bg = ArchBlack,
+	fg = ArchWhite,
+	p = ArchDarkGray,
+	tg = ArchGreen,
+	bdr = ArchWhite,
 	drawBorder = 2,
 	drawBG = 2,
 	ha = 0,
@@ -147,18 +147,17 @@ baseStyle = {
 ---@endsection
 
 ---@section getRect
-function getRect(b, f)
-	local r = { b.x * (gridX + gridXSpace), b.y * (gridY + gridYSpace), b.w * gridX, b.h * gridY }
-	if f then
-		r[3] = r[3] * (b.fillHeight or 1)
-		r[4] = r[4] * (b.fillWidth or 1)
-	end
-	return r
+function getRect(b, fw, fh)
+	return { b.x * (gridX + gridXSpace)
+	, b.y * (gridY + gridYSpace)
+	, b.w * gridX * (fw or 1)
+	, b.h * gridY * (fh or 1) }
 end
 
 ---@endsection
 
 ---@section addElement
+---@type table<number, MyElement>
 elements = {}
 
 ---@class MyElement
@@ -278,49 +277,50 @@ end
 
 ---@section drawUI
 function drawUI()
-	if backgroundColor ~= nil then
+	if backgroundColor then
 		backgroundColor()
 		drawFilledRect(0, 0, screen.getWidth(), screen.getHeight())
 	end
 
 	for k, b in pairs(elements) do
-		local s = b.st;
-		local r = getRect(b)
-
-
-		if shouldDraw(s.drawBG) then
+		localState = b.st;
+		drawUI_LocalRect = getRect(b)
+		if shouldDraw(localState.drawBG, b) then
 			if b.p then
-				setColor(s.p)
+				localState.p()
 			elseif b.tg or b.rt then
-				setColor(s.tg)
+				localState.tg()
 			else
-				setColor(s.bg)
+				localState.bg()
 			end
-			drawFilledRect(tU(r, 1, 4))
+			drawFilledRect(tU(drawUI_LocalRect, 1, 4))
 		end
 
-		if b.fillHeight ~= nil or b.fillWidth ~= nil then
-			local fr = getRect(b, true)
-			setColor(s.tg)
-			drawFilledRect(tU(fr, 1, 4))
+		if b.fillHeight or b.fillWidth then
+			drawUiFillRect = getRect(b, b.fillWidth, b.fillHeight)
+			localState.tg()
+			drawFilledRect(tU(drawUiFillRect, 1, 4))
 		end
-		local txt = { tU(r) }
-		txt[1] = txt[1] + s.txo
-		txt[2] = txt[2] + s.tyo
-		tI(txt, b.t)
-		tI(txt, s.ha)
-		tI(txt, s.va)
-		setColor(s.fg)
-		drawTextBox(tU(txt, 1, 7))
-		if shouldDraw(s.drawBorder) then
-			setColor(s.bdr)
-			drawRect(tU(r, 1, 4))
+		drawUiText = { tU(drawUI_LocalRect) }
+		drawUiText[1] = drawUiText[1] + localState.txo
+		drawUiText[2] = drawUiText[2] + localState.tyo
+		tI(drawUiText, b.t)
+		tI(drawUiText, localState.ha)
+		tI(drawUiText, localState.va)
+		localState.fg()
+		drawTextBox(tU(drawUiText, 1, 7))
+		if shouldDraw(localState.drawBorder, b) then
+			localState.bdr()
+			drawRect(tU(drawUI_LocalRect, 1, 4))
 		end
 	end
+end
 
-	function shouldDraw(check)
-		return check == 2 or (check == 1 and (b.p or b.tg or b.rt))
-	end
+---@function shouldDraw
+---@param check number 0 never, 1 on press, 2 always
+---@param b MyElement
+function shouldDraw(check, b)
+	return (check == 2 or (check == 1 and (b.p or b.tg or b.rt))) == true
 end
 
 ---@endsection

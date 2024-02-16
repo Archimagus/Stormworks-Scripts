@@ -34,15 +34,15 @@ slurryPump = false
 drillSpeed = 0
 barrelIndex = 0
 
-drillButton = addElement({ x = 0, y = 0, w = 4, t = "Drill", tg = false })
-grabPipeButton = addElement({ x = 5, y = 3, w = 4, t = "Grab", p = false })
+drillButton = addElement({ x = 0, y = 2, w = 4, t = "Drill", tg = false })
+grabPipeButton = addElement({ x = 0, y = 0, w = 4, t = "Grab", p = false })
 adjustGripperLeftButton = addElement({ x = 9, y = 6, w = 1, t = "<", p = false })
 adjustGripperRightButton = addElement({ x = 10, y = 6, w = 1, t = ">", p = false })
 mergeButton = addElement({ x = 5, y = 6, w = 4, t = "Join", p = false, st = { drawBG = 1 } })
 adjustJoinerLeftButton = addElement({ x = 3, y = 6, w = 1, t = "<", p = false })
 adjustJoinerRightButton = addElement({ x = 4, y = 6, w = 1, t = ">", p = false })
 
-bitIndexLabel = addElement({ x = 3, y = 1, w = 4, t = "Bit:0", st = { drawBorder = 0, drawBG = 0 } })
+bitIndexLabel = addElement({ x = 2, y = 1, w = 3, t = "Bit:0", st = { drawBorder = 0, drawBG = 0 } })
 
 addElement({
     x = 1,
