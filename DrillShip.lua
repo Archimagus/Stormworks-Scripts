@@ -14,21 +14,10 @@
 
 
 require("Utils.MyIoUtils")
-require("Utils.StateMachine")
+require("Utils.ArchStateMachine")
 require("Utils.MyUITools")
 require("LifeBoatAPI")
-
-GrabberStates = {
-    grabberWatchState = 'gw',
-    grabPipeState = 'gp',
-    grabberStuckState = 'gs',
-    positionPipeState = 'pp',
-}
-
-DrillStates = {
-    drillRetractState = 'dr',
-    drillState = 'd',
-}
+require("Utils.MyMath")
 
 gripperRailUp = false
 gripperRailDown = false
@@ -81,7 +70,7 @@ addElement({
     end
 })
 
-grabberWatch = function(s)
+grabberWatchState = function(s)
     gripperAngle = -1
     gripperClamp = false
     gripperRailDown = false
@@ -92,10 +81,10 @@ grabberWatch = function(s)
         gripperRailUp = true
     end
     if (grabPipeButton.p) then
-        return GrabberStates.grabPipeState
+        return grabPipeState
     end
 end
-grabberStuck = function(s)
+grabberStuckState = function(s)
     gripperAngle = 1
     gripperClamp = false
     gripperRailDown = false
@@ -106,38 +95,38 @@ grabberStuck = function(s)
         gripperRailUp = false
     end
     if grabPipeButton.p then
-        return GrabberStates.grabPipeState
+        return grabPipeState
     end
 end
-grabPipe = function(self)
+grabPipeState = function(self)
     gripperAngle = 1
     gripperClamp = true
     if self.ticks > 90 then
         gripperRailUp = true
     end
     if (gripperClamped) then
-        return GrabberStates.positionPipeState
+        return positionPipeState
     end
     if (gripperRailPosition > 0.49 or self.ticks > 200) then
-        return GrabberStates.grabberStuckState
+        return grabberStuckState
     end
 end
-positionPipe = function(s)
+positionPipeState = function(s)
     gripperRailUp = false
     gripperRailDown = true
     gripperAngle = -1
     mergeButton.t = connectorAligned and "Join" or ""
     mergeButton.st.drawBG = connectorAligned and 2 or 0
     if drillButton.p then
-        return GrabberStates.grabberWatchState
+        return grabberWatchState
     end
 end
 
-drill = function(s)
-    if not drillButton.tg or spindleRailPosition <= -0.183 then
+drillState = function(s)
+    if not drillButton.tg or spindleRailPosition <= -0.25 then
         drillButton.t = "Drill"
         drillButton.tg = false
-        return DrillStates.drillRetractState
+        return drillRetractState
     end
 
     spindleLock = true
@@ -152,7 +141,7 @@ drill = function(s)
     end
 end
 
-drillRetract = function(s)
+drillRetractState = function(s)
     spindleLock = false
     spindleUp = true
     spindleDown = false
@@ -161,23 +150,17 @@ drillRetract = function(s)
 
     if drillButton.tg then
         drillButton.t = "Retract"
-        return DrillStates.drillState
+        return drillState
     end
 end
 
-grabberMachine = MyUtils.StateMachine:new(GrabberStates.grabberWatchState, grabberWatch)
-grabberMachine:addState(GrabberStates.grabPipeState, grabPipe)
-grabberMachine:addState(GrabberStates.positionPipeState, positionPipe)
-grabberMachine:addState(GrabberStates.grabberStuckState, grabberStuck)
-
-drillMachine = MyUtils.StateMachine:new(DrillStates.drillRetractState, drillRetract)
-drillMachine:addState(DrillStates.drillState, drill)
+grabberMachine = ArchStateMachine:new(grabberWatchState)
+drillMachine = ArchStateMachine:new(drillRetractState)
 
 function onTick()
-    isPressed1, isPressed2, gripperClamped, connectorClamped, connectorAligned, spindleClamped, wellHeadLocked = getB(1,
-        2, 3, 4, 5, 6, 32)
-    screenWidth, screenHeight, input1X, input1Y, input2X, input2Y, barrelAngle, gripperRailPosition, spindleRailPosition, headWinchPosition, drillDepth, wellDepth =
-        getN(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 31, 32)
+    gripperClamped, connectorClamped, connectorAligned, spindleClamped, wellHeadLocked = getB(3, 4, 5, 6, 32)
+    barrelAngle, gripperRailPosition, spindleRailPosition, headWinchPosition, drillDepth, wellDepth =
+        getN(7, 8, 9, 10, 31, 32)
 
     tickUI()
 
@@ -201,14 +184,5 @@ function onDraw()
 end
 
 function rampNumber(value, up, down)
-    if up then
-        value = math.min(value + 0.01, 1)
-        return value
-    end
-    if down then
-        value = math.max(value - 0.01, -1)
-        return value
-    end
-    value = 0
-    return value
+    return clamp(value + (up and 0.01 or (down and -0.01 or 0)), -1, 1)
 end

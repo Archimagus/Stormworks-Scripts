@@ -285,17 +285,20 @@ function drawUI()
 
 	for k, b in pairs(elements) do
 		local s = b.st;
-		if b.p then
-			setColor(s.p)
-		elseif b.tg or b.rt then
-			setColor(s.tg)
-		else
-			setColor(s.bg)
-		end
 		local r = getRect(b)
-		if s.drawBG == 2 or (s.drawBG == 1 and (b.p or b.tg or b.rt)) then
+
+
+		if shouldDraw(s.drawBG) then
+			if b.p then
+				setColor(s.p)
+			elseif b.tg or b.rt then
+				setColor(s.tg)
+			else
+				setColor(s.bg)
+			end
 			drawFilledRect(tU(r, 1, 4))
 		end
+
 		if b.fillHeight ~= nil or b.fillWidth ~= nil then
 			local fr = getRect(b, true)
 			setColor(s.tg)
@@ -309,10 +312,14 @@ function drawUI()
 		tI(txt, s.va)
 		setColor(s.fg)
 		drawTextBox(tU(txt, 1, 7))
-		if s.drawBorder then
+		if shouldDraw(s.drawBorder) then
 			setColor(s.bdr)
 			drawRect(tU(r, 1, 4))
 		end
+	end
+
+	function shouldDraw(check)
+		return check == 2 or (check == 1 and (b.p or b.tg or b.rt))
 	end
 end
 
