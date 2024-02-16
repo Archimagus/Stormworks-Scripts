@@ -123,7 +123,7 @@ positionPipeState = function(s)
 end
 
 drillState = function(s)
-    if not drillButton.tg or spindleRailPosition <= -0.25 then
+    if not drillButton.tg or spindleRailPosition <= -0.304 then
         drillButton.t = "Drill"
         drillButton.tg = false
         return drillRetractState
@@ -168,7 +168,7 @@ function onTick()
     drillMachine:onTick()
 
     gripperPipeVelocity = rampNumber(gripperPipeVelocity, adjustGripperRightButton.p, adjustGripperLeftButton.p)
-    joinerPipeVelocity = rampNumber(joinerPipeVelocity, adjustJoinerRightButton.p, adjustJoinerLeftButton.b)
+    joinerPipeVelocity = rampNumber(joinerPipeVelocity, adjustJoinerRightButton.p, adjustJoinerLeftButton.p)
 
     barrelTarget = barrelIndex / 36;
     barrelVelocity = (barrelTarget - barrelAngle) * 10;
@@ -184,5 +184,5 @@ function onDraw()
 end
 
 function rampNumber(value, up, down)
-    return clamp(value + (up and 0.01 or (down and -0.01 or 0)), -1, 1)
+    return up and math.min(value + 0.01, 1) or down and math.max(value - 0.01, -1) or 0
 end
