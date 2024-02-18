@@ -13,11 +13,8 @@
 -- require("LifeBoatAPI.Tickable.LBTouchScreen")
 
 
-require("Utils.MyIoUtils")
-require("Utils.ArchStateMachine")
-require("Utils.MyUITools")
+require("Utils")
 require("LifeBoatAPI")
-require("Utils.MyMath")
 
 gripperRailUp = false
 gripperRailDown = false
@@ -32,45 +29,24 @@ spindleUp = false
 spindleDown = false
 slurryPump = false
 drillSpeed = 0
-barrelIndex = 0
+indexBit = 0
 
 drillButton = addElement({ x = 0, y = 2, w = 4, t = "Drill", tg = false })
 grabPipeButton = addElement({ x = 0, y = 0, w = 4, t = "Grab", p = false })
-adjustGripperLeftButton = addElement({ x = 9, y = 6, w = 1, t = "<", p = false })
-adjustGripperRightButton = addElement({ x = 10, y = 6, w = 1, t = ">", p = false })
-mergeButton = addElement({ x = 5, y = 6, w = 4, t = "Join", p = false, st = { drawBG = 1 } })
-adjustJoinerLeftButton = addElement({ x = 3, y = 6, w = 1, t = "<", p = false })
-adjustJoinerRightButton = addElement({ x = 4, y = 6, w = 1, t = ">", p = false })
+adjustJoinerLeftButton = addElement({ x = 4, y = 6, w = 1, t = "<", p = false })
+adjustJoinerRightButton = addElement({ x = 5, y = 6, w = 1, t = ">", p = false })
+mergeButton = addElement({ x = 6, y = 6, w = 5, t = "Join", p = false, st = { drawBG = 1 } })
+adjustGripperLeftButton = addElement({ x = 11, y = 6, w = 1, t = "<", p = false })
+adjustGripperRightButton = addElement({ x = 12, y = 6, w = 1, t = ">", p = false })
 
-bitIndexLabel = addElement({ x = 2, y = 1, w = 3, t = "Bit:0", st = { drawBorder = 0, drawBG = 0 } })
+bitDepthLabel = addElement({ x = 0, y = 7, w = 5, st = { drawBG = 0, drawBorder = 0, ha = 1, fg = ArchMaroon }, })
+winchLabel = addElement({ x = 0, y = 8, w = 5, st = { drawBG = 0, drawBorder = 0, ha = 1, fg = ArchMaroon }, })
 
-addElement({
-    x = 1,
-    y = 1,
-    w = 1,
-    t = ">",
-    p = false,
-    cf = function()
-        barrelIndex = (barrelIndex + 1) % 36
-        bitIndexLabel.t = "Bit:" .. tostring(barrelIndex)
-    end
-})
-addElement({
-    x = 0,
-    y = 1,
-    w = 1,
-    t = "<",
-    p = false,
-    cf = function()
-        barrelIndex = barrelIndex - 1
-        if barrelIndex < 0 then
-            barrelIndex = 35
-        end
-        bitIndexLabel.t = "Bit:" .. tostring(barrelIndex)
-    end
-})
 
-grabberWatchState = function(s)
+barrelRightButton = addElement({ x = 1, y = 1, w = 1, t = ">", p = false })
+barrelLeftButton = addElement({ x = 0, y = 1, w = 1, t = "<", p = false })
+
+grabberWatchState = function()
     gripperAngle = -1
     gripperClamp = false
     gripperRailDown = false
@@ -81,10 +57,11 @@ grabberWatchState = function(s)
         gripperRailUp = true
     end
     if (grabPipeButton.p) then
+        indexBit = 1
         return grabPipeState
     end
 end
-grabberStuckState = function(s)
+grabberStuckState = function()
     gripperAngle = 1
     gripperClamp = false
     gripperRailDown = false
@@ -99,6 +76,7 @@ grabberStuckState = function(s)
     end
 end
 grabPipeState = function(self)
+    indexBit = 0
     gripperAngle = 1
     gripperClamp = true
     if self.ticks > 90 then
@@ -111,18 +89,28 @@ grabPipeState = function(self)
         return grabberStuckState
     end
 end
-positionPipeState = function(s)
+positionPipeState = function(self)
     gripperRailUp = false
     gripperRailDown = true
     gripperAngle = -1
+
+    if self.ticks < 60 then
+        adjustGripperRightButton.p = true
+    end
+
     mergeButton.t = connectorAligned and "Join" or ""
-    mergeButton.st.drawBG = connectorAligned and 2 or 0
+    mergeButton.st.fg = connectorAligned and ArchGreen or ArchGray
+    mergeButton.visible = true
+    adjustGripperLeftButton.visible = true
+    adjustGripperRightButton.visible = true
+    adjustJoinerLeftButton.visible = true
+    adjustJoinerRightButton.visible = true
     if drillButton.p then
         return grabberWatchState
     end
 end
 
-drillState = function(s)
+drillState = function()
     if not drillButton.tg or spindleRailPosition <= -0.304 then
         drillButton.t = "Drill"
         drillButton.tg = false
@@ -141,7 +129,7 @@ drillState = function(s)
     end
 end
 
-drillRetractState = function(s)
+drillRetractState = function()
     spindleLock = false
     spindleUp = true
     spindleDown = false
@@ -157,32 +145,43 @@ end
 grabberMachine = ArchStateMachine:new(grabberWatchState)
 drillMachine = ArchStateMachine:new(drillRetractState)
 
+
+
 function onTick()
     gripperClamped, connectorClamped, connectorAligned, spindleClamped, wellHeadLocked = getB(3, 4, 5, 6, 32)
-    barrelAngle, gripperRailPosition, spindleRailPosition, headWinchPosition, drillDepth, wellDepth =
-        getN(7, 8, 9, 10, 31, 32)
+    barrelAngle, gripperRailPosition, spindleRailPosition, headWinchPosition, bitDistance, drillDepth, wellDepth =
+        getN(7, 8, 9, 10, 11, 31, 32)
+
+
+    mergeButton.visible = grabberMachine.currentState == positionPipeState
+    adjustGripperLeftButton.visible = grabberMachine.currentState == positionPipeState
+    adjustGripperRightButton.visible = grabberMachine.currentState == positionPipeState
+    adjustJoinerLeftButton.visible = grabberMachine.currentState == positionPipeState
+    adjustJoinerRightButton.visible = grabberMachine.currentState == positionPipeState
 
     tickUI()
 
     grabberMachine:onTick()
     drillMachine:onTick()
 
-    gripperPipeVelocity = rampNumber(gripperPipeVelocity, adjustGripperRightButton.p, adjustGripperLeftButton.p)
-    joinerPipeVelocity = rampNumber(joinerPipeVelocity, adjustJoinerRightButton.p, adjustJoinerLeftButton.p)
+    gripperPipeVelocity = ArchRampNumber(gripperPipeVelocity, adjustGripperRightButton.p, adjustGripperLeftButton.p)
+    joinerPipeVelocity = ArchRampNumber(joinerPipeVelocity, adjustJoinerRightButton.p, adjustJoinerLeftButton.p)
 
-    barrelTarget = barrelIndex / 36;
-    barrelVelocity = (barrelTarget - barrelAngle) * 10;
+    bitWinchDown = drillMachine.currentState == drillState and bitDistance > headWinchPosition - 0.1
+
+    winchLabel.t = "Winch:" .. string.format("%.2f", headWinchPosition) .. "m"
+    bitDepthLabel.t = "Bit:" .. string.format("%.2f", bitDistance) .. "m"
 
     outB(1, gripperRailUp, gripperRailDown, gripperClamp, mergeButton.p, spindleUp, spindleDown, spindleLock,
-        slurryPump)
+        slurryPump, bitWinchDown)
+    outN(1, gripperAngle, gripperPipeVelocity, joinerPipeVelocity, drillSpeed, joinerPipeVelocity)
+
+    -- Outputs for other scripts or for across the composite
+    outB(21, barrelLeftButton.p, barrelRightButton.p)
+    outN(20, barrelAngle, indexBit)
     outB(31, lockWellHead)
-    outN(1, gripperAngle, gripperPipeVelocity, joinerPipeVelocity, drillSpeed, barrelVelocity, joinerPipeVelocity)
 end
 
 function onDraw()
     drawUI()
-end
-
-function rampNumber(value, up, down)
-    return up and math.min(value + 0.01, 1) or down and math.max(value - 0.01, -1) or 0
 end

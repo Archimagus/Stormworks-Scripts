@@ -9,6 +9,11 @@
 function onLBBuildFileComplete(rootPath, name, inputFile, minimizedText, inputText, combinedText)
 	if name == "DrillShip.lua" then
 		targetPath = LifeBoatAPI.Tools.Filepath:new(
+			"D:/repos/Stormworks/Workspace/Tippy Shippy/Drill Rig MC/112/script.lua")
+		LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
+	end
+	if name == "DrillShip2.lua" then
+		targetPath = LifeBoatAPI.Tools.Filepath:new(
 			"D:/repos/Stormworks/Workspace/Tippy Shippy/Drill Rig MC/19/script.lua")
 		LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
 	end

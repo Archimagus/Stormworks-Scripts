@@ -1,6 +1,6 @@
 ---@diagnostic disable: duplicate-doc-field
+require("LifeBoatAPI.Utils.LBCopy")
 require("Utils.MyIoUtils")
-
 drawTextBox = screen.drawTextBox
 drawRect = screen.drawRect
 drawFilledRect = screen.drawRectF
@@ -166,6 +166,7 @@ elements = {}
 ---@field w number width in grid cells
 ---@field h number height in grid cells
 ---@field t string text
+---@field visible boolean|nil draw and process this element
 ---@field st baseStyle style override
 ---@field p boolean|nil pressed state (if nil, not a clickable element)
 ---@field tg boolean|nil current toggle state (if nil, not a toggle button)
@@ -184,6 +185,7 @@ function addElement(e)
 	e.w = e.w or 1
 	e.h = e.h or 1
 	e.t = e.t or ""
+	e.visible = e.visible
 	--e.st style override
 	--e.tg  make button toggle
 	--e.ri  radio button index
@@ -251,24 +253,26 @@ function tickUI()
 	releasedThisFrame = isTouched and not touch
 	isTouched = touch
 	for _, b in pairs(elements) do
-		if b.p ~= nil then
-			if inRect(tx, ty, tU(getRect(b), 1, 4)) then
-				if isTouched and not b.p then
-					toggleB(b)
-					radioB(b)
-					clickB(b)
+		if b.visible ~= false then
+			if b.p ~= nil then
+				if inRect(tx, ty, tU(getRect(b), 1, 4)) then
+					if isTouched and not b.p then
+						toggleB(b)
+						radioB(b)
+						clickB(b)
+					end
+					b.p = isTouched
 				end
-				b.p = isTouched
+				if not isTouched then
+					b.p = false
+				end
+				if b.p and b.hf then
+					b:hf()
+				end
 			end
-			if not isTouched then
-				b.p = false
+			if b.uf then
+				b:uf()
 			end
-			if b.p and b.hf then
-				b:hf()
-			end
-		end
-		if b.uf then
-			b:uf()
 		end
 	end
 end
@@ -283,35 +287,37 @@ function drawUI()
 	end
 
 	for k, b in pairs(elements) do
-		localState = b.st;
-		drawUI_LocalRect = getRect(b)
-		if shouldDraw(localState.drawBG, b) then
-			if b.p then
-				localState.p()
-			elseif b.tg or b.rt then
-				localState.tg()
-			else
-				localState.bg()
+		if b.visible ~= false then
+			localState = b.st;
+			drawUI_LocalRect = getRect(b)
+			if shouldDraw(localState.drawBG, b) then
+				if b.p then
+					localState.p()
+				elseif b.tg or b.rt then
+					localState.tg()
+				else
+					localState.bg()
+				end
+				drawFilledRect(tU(drawUI_LocalRect, 1, 4))
 			end
-			drawFilledRect(tU(drawUI_LocalRect, 1, 4))
-		end
 
-		if b.fillHeight or b.fillWidth then
-			drawUiFillRect = getRect(b, b.fillWidth, b.fillHeight)
-			localState.tg()
-			drawFilledRect(tU(drawUiFillRect, 1, 4))
-		end
-		drawUiText = { tU(drawUI_LocalRect) }
-		drawUiText[1] = drawUiText[1] + localState.txo
-		drawUiText[2] = drawUiText[2] + localState.tyo
-		tI(drawUiText, b.t)
-		tI(drawUiText, localState.ha)
-		tI(drawUiText, localState.va)
-		localState.fg()
-		drawTextBox(tU(drawUiText, 1, 7))
-		if shouldDraw(localState.drawBorder, b) then
-			localState.bdr()
-			drawRect(tU(drawUI_LocalRect, 1, 4))
+			if b.fillHeight or b.fillWidth then
+				drawUiFillRect = getRect(b, b.fillWidth, b.fillHeight)
+				localState.tg()
+				drawFilledRect(tU(drawUiFillRect, 1, 4))
+			end
+			drawUiText = { tU(drawUI_LocalRect) }
+			drawUiText[1] = drawUiText[1] + localState.txo
+			drawUiText[2] = drawUiText[2] + localState.tyo
+			tI(drawUiText, b.t)
+			tI(drawUiText, localState.ha)
+			tI(drawUiText, localState.va)
+			localState.fg()
+			drawTextBox(tU(drawUiText, 1, 7))
+			if shouldDraw(localState.drawBorder, b) then
+				localState.bdr()
+				drawRect(tU(drawUI_LocalRect, 1, 4))
+			end
 		end
 	end
 end
