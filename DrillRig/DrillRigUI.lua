@@ -2,29 +2,24 @@ require("Utils.MyIoUtils")
 require("Utils.MyUITools")
 require("DrillShip.DrillStates")
 
-adjustJoinerDownButton = addElement({ x = 4, y = 6, w = 1, t = "<", p = false })
-adjustJoinerUpButton = addElement({ x = 5, y = 6, w = 1, t = ">", p = false })
-grabPipeButton = addElement({ x = 6, y = 4, w = 5, t = "Grab", p = false })
-mergeButton = addElement({ x = 6, y = 6, w = 5, t = "Join", p = false, st = { drawBG = 1 } })
-drillButton = addElement({ x = 6, y = 8, w = 5, t = "Drill", tg = false })
-adjustGripperDownButton = addElement({ x = 11, y = 6, w = 1, t = "<", p = false })
-adjustGripperUpButton = addElement({ x = 12, y = 6, w = 1, t = ">", p = false })
+grabPipeButton = addElement({ x = 6, y = 3, w = 4, t = "Grab", p = false })
+mergeButton = addElement({ x = 11, y = 4, w = 2, h = 5, t = "Join", p = false, st = { drawBG = 1 } })
+drillButton = addElement({ x = 6, y = 9, w = 4, t = "Drill", tg = false })
+adjustGripperUpButton = addElement({ x = 11.5, y = 3, w = 1, t = "^", p = false, fg = ArchBlack, bg = ArchBrown })
+adjustGripperDownButton = addElement({ x = 11.5, y = 9, w = 1, t = "V", p = false, fg = ArchBlack, bg = ArchBrown })
+adjustJoinerUpButton = addElement({ x = 10, y = 3, w = 1, t = "^", p = false, fg = ArchBlack, bg = ArchGreen })
+adjustJoinerDownButton = addElement({ x = 10, y = 9, w = 1, t = "V", p = false, fg = ArchBlack, bg = ArchGreen })
 
-bitWinchUpButton = addElement({ x = 0, y = 6, w = 1, t = "^", p = false })
-bitWinchDownButton = addElement({ x = 0, y = 7, w = 1, t = "v", p = false })
-
-drillDepthLabel = addElement({ x = 0, y = 11, w = 8, st = { drawBorder = 0, ha = -1, fg = ArchMaroon } })
-wellDepthLabel = addElement({ x = 0, y = 12, w = 8, st = { drawBorder = 0, ha = -1, fg = ArchMaroon } })
-bitDepthLabel = addElement({ x = 8, y = 11, w = 8, st = { drawBorder = 0, ha = -1, fg = ArchMaroon } })
-winchLabel = addElement({ x = 8, y = 12, w = 8, st = { drawBorder = 0, ha = -1, fg = ArchMaroon } })
+-- drillDepthLabel = addElement({ x = 0, y = 11, w = 8, st = { drawBorder = 0, ha = -1, fg = ArchMaroon } })
+-- wellDepthLabel = addElement({ x = 0, y = 12, w = 8, st = { drawBorder = 0, ha = -1, fg = ArchMaroon } })
+-- bitDepthLabel = addElement({ x = 8, y = 11, w = 8, st = { drawBorder = 0, ha = -1, fg = ArchMaroon } })
+-- winchLabel = addElement({ x = 8, y = 12, w = 8, st = { drawBorder = 0, ha = -1, fg = ArchMaroon } })
 
 
 barrelIndexLeftButton = addElement({ x = 0, y = 2, w = 1, t = "<<", p = false })
 barrelLeftButton = addElement({ x = 1, y = 2, w = 1, t = "<", p = false })
 barrelRightButton = addElement({ x = 2, y = 2, w = 1, t = ">", p = false })
 barrelIndexRightButton = addElement({ x = 3, y = 2, w = 1, t = ">>", p = false })
-
-bitIndexLabel = addElement({ x = 5, y = 2, w = 16, t = "Bit:1", st = { drawBorder = 0, fg = ArchMaroon, ha = -1 } })
 
 
 function onTick()
@@ -59,16 +54,10 @@ function onTick()
 	adjustJoinerDownButton.visible  = connectorClamped and drillState == DrillStates.DrillRetract
 	adjustJoinerUpButton.visible    = connectorClamped and drillState == DrillStates.DrillRetract
 
-	bitIndexLabel.t                 = "Bit:" ..
-		string.format("%d", rackIndex) ..
-		"A:" ..
-		string.format("%.3f", rackPosition) ..
-		"T:" .. string.format("%.3f", rackTargetPosition)
-
-	winchLabel.t                    = "Winch:" .. string.format("%.2f", headWinchPosition) .. "m"
-	bitDepthLabel.t                 = "Bit  :" .. string.format("%.2f", bitDistance) .. "m"
-	drillDepthLabel.t               = "Drill Depth:" .. string.format("%.2f", drillDepth) .. "m"
-	wellDepthLabel.t                = " Well Depth:" .. string.format("%.2f", wellDepth) .. "m"
+	-- winchLabel.t                     = "Winch:" .. string.format("%.2f", headWinchPosition) .. "m"
+	-- bitDepthLabel.t                  = "Bit  :" .. string.format("%.2f", bitDistance) .. "m"
+	-- drillDepthLabel.t                = "Drill Depth:" .. string.format("%.2f", drillDepth) .. "m"
+	-- wellDepthLabel.t                 = " Well Depth:" .. string.format("%.2f", wellDepth) .. "m"
 
 
 	tickUI()
@@ -84,9 +73,7 @@ function onTick()
 		barrelRightButton.p,
 		barrelIndexLeftButton.p,
 		barrelIndexRightButton.p,
-		mergeButton.p,
-		bitWinchDownButton.p,
-		bitWinchUpButton.p
+		mergeButton.p
 	)
 	outB(32, wellHeadLocked)
 end

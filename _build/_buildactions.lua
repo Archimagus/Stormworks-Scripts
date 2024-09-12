@@ -23,14 +23,53 @@ function onLBBuildFileComplete(rootPath, name, inputFile, minimizedText, inputTe
 	-- 		"D:/repos/Stormworks/Workspace/Tippy Shippy/Drill Bit Display MC/37/script.lua")
 	-- 	LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
 	-- end
-	if name == "CVT.lua" then
+
+	-- if name == "DrillRig\\DrillRig.lua" then
+	-- 	targetPath = LifeBoatAPI.Tools.Filepath:new(
+	-- 		"D:/repos/Stormworks/Workspace/oil drill rig automated/Drill Rig MC/19/script.lua")
+	-- 	LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
+	-- 	os.execute('clip < \"' .. targetPath:win() .. '\"')
+	-- end
+	-- if name == "DrillRig\\DrillRigUI.lua" then
+	-- 	targetPath = LifeBoatAPI.Tools.Filepath:new(
+	-- 		"D:/repos/Stormworks/Workspace/oil drill rig automated/Drill Rig MC/116/script.lua")
+	-- 	LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
+	-- end
+	-- if name == "DrillRig\\DrillRigBitIndicator.lua" then
+	-- 	targetPath = LifeBoatAPI.Tools.Filepath:new(
+	-- 		"D:/repos/Stormworks/Workspace/oil drill rig automated/Drill Bit Display MC/37/script.lua")
+	-- 	LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
+	-- end
+
+	-- if name == "CVT.lua" then
+	-- 	targetPath = LifeBoatAPI.Tools.Filepath:new(
+	-- 		"D:/repos/Stormworks/Workspace/Hatchback CVT/Car Throttle 2 MC/23/script.lua")
+	-- 	LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
+	-- end
+	-- if name == "CarThrottle.lua" then
+	-- 	targetPath = LifeBoatAPI.Tools.Filepath:new(
+	-- 		"D:/repos/Stormworks/Workspace/Hatchback CVT/Car Throttle 2 MC/56/script.lua")
+	-- 	LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
+	-- end
+	-- if name == "CarControl.lua" then
+	-- 	targetPath = LifeBoatAPI.Tools.Filepath:new(
+	-- 		"D:/repos/Stormworks/Workspace/Hatchback CVT NewController/Car Controls MC/23/script.lua")
+	-- 	LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
+	-- end
+	-- if name == "CarControl.lua" then
+	-- 	targetPath = LifeBoatAPI.Tools.Filepath:new(
+	-- 		"D:/repos/Stormworks/Workspace/Python Fisher/ThrottleCVT Controls/23/script.lua")
+	-- 	LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
+	-- end
+	-- if name == "BoatCVT.lua" then
+	-- 	targetPath = LifeBoatAPI.Tools.Filepath:new(
+	-- 		"D:/repos/Stormworks/Workspace/Python Fisher/Boat CVT/23/script.lua")
+	-- 	LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
+	-- end
+
+	if name == "BoatThrottle.lua" then
 		targetPath = LifeBoatAPI.Tools.Filepath:new(
-			"D:/repos/Stormworks/Workspace/Starter Tanker Truck/CVT MC/23/script.lua")
-		LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
-	end
-	if name == "CarThrottle.lua" then
-		targetPath = LifeBoatAPI.Tools.Filepath:new(
-			"D:/repos/Stormworks/Workspace/Starter Tanker Truck/Car Throttle 2 MC/56/script.lua")
+			"D:/repos/Stormworks/Workspace/Salvage Rescue Ship/Boat Throttle/56/script.lua")
 		LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
 	end
 end

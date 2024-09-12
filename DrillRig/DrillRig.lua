@@ -25,23 +25,21 @@ gripperPipeVelocity = 0
 joinerPipeVelocity = 0
 gripperClamp = false
 
-lockWellHead = true
 spindleLock = false
 spindleUp = false
 spindleDown = false
 slurryPump = false
 drillSpeed = 0
 
-rackIndex = 0
+rackIndex = 1
 indexBit = 0
 prevIndexBit = 0
+rackOffset = 1.5
+rackTargetPosition = 0
 targetPositions = {
-    0, 0.028, 0.0558, 0.087777, 0.115, 0.165, 0.191, 0.22, 0.25, 0.277777,
-    0.307, 0.336, 0.362, 0.4166, 0.444444, 0.47, 0.5, 0.527777, 0.555555, 0.585,
-    0.615, 0.666, 0.694, 0.722222, 0.75, 0.777777, 0.805555, 0.835, 0.863, 0.916,
-    0.9444, 0.972222
+    0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0
 }
-function incrementBarrel(count)
+function incrementRack(count)
     rackIndex = (rackIndex + count)
     if rackIndex < 1 then
         rackIndex = #targetPositions
@@ -61,7 +59,6 @@ grabberWatchState = function()
         gripperRailUp = true
     end
     if (grabPipeTransition) then
-        incrementBarrel(1)
         return GrabberStates.GrabPipe
     end
 end
@@ -86,19 +83,22 @@ grabPipeState = function(s)
         gripperRailUp = true
     end
     if (gripperClamped) then
+        incrementRack(1)
         return GrabberStates.PositionPipe
     end
-    if (gripperRailPosition > 0.49 or s.ticks > 200) then
+    if (s.ticks > 200) then
         return GrabberStates.GrabberStuck
     end
 end
 positionPipeState = function(s)
     gripperRailUp = false
     gripperRailDown = true
-    gripperAngle = -1
 
     if s.ticks < 60 then
         adjustGripperUpButton = true
+    end
+    if s.ticks > 30 then
+        gripperAngle = -1
     end
 
     if grabPipeTransition then
@@ -111,7 +111,7 @@ positionPipeState = function(s)
 end
 
 drillState = function()
-    if spindleRailPosition <= -0.304 or (spindleRailPosition <= -0.3 and not drillToggle) then
+    if spindleRailPosition <= -0.25 or (spindleRailPosition <= -0.3 and not drillToggle) then
         drillToggle = false
         spindleLock = false
         return DrillStates.DrillRetract
@@ -124,7 +124,7 @@ drillState = function()
     spindleLock = true
     spindleDown = true
     spindleUp = false
-    if spindleClamped and wellHeadLocked then
+    if spindleClamped then
         slurryPump = true
         drillSpeed = 1
     else
@@ -159,16 +159,15 @@ grabPipePulse = ArchPulse:new()
 function onTick()
     grabPipeButton, drillButton,
     adjustGripperDownButton, adjustGripperUpButton, adjustJoinerDownButton, adjustJoinerUpButton,
-    barrelLeftButton, barrelRightButton, barrelIndexLeftButton, barrelIndexRightButton, connectorJoinButton,
-    bitWinchDownButton, bitWinchUpButton,
-    gripperClamped, connectorClamped, connectorAligned, spindleClamped, wellHeadLocked = getB(1, 2,
+    rackLeftButton, rackRightButton, rackIndexLeftButton, rackIndexRightButton, connectorJoinButton,
+    gripperClamped, connectorClamped, connectorAligned, spindleClamped = getB(1, 2,
         3, 4, 5, 6,
         7, 8, 9, 10, 11,
         12, 13,
-        14, 15, 16, 17, 32)
+        14, 15, 16, 17)
 
-    rackPosition, gripperRailPosition, spindleRailPosition, headWinchPosition, bitDistance =
-        getN(1, 2, 3, 4, 5)
+    rackPosition, gripperRailPosition, spindleRailPosition =
+        getN(1, 2, 3)
 
     grabPipeTransition = grabPipePulse:check(grabPipeButton)
 
@@ -179,33 +178,28 @@ function onTick()
     grabberMachine:onTick()
     drillMachine:onTick()
 
-    if (barrelIndexRightButton) then
+    if (rackIndexRightButton) then
         indexBit = 1
-    elseif (barrelIndexLeftButton) then
+    elseif (rackIndexLeftButton) then
         indexBit = -1
     else
         indexBit = 0
     end
     if indexBit ~= prevIndexBit then
         prevIndexBit = indexBit
-        incrementBarrel(indexBit)
+        incrementRack(indexBit)
     end
 
-    rackTargetPosition = ArchRampNumber(rackTargetPosition, barrelRightButton, barrelLeftButton, 0.0001, true)
-    local barrelVelocity = (rackTargetPosition - rackPosition) * 10
+    rackTargetPosition = ArchRampNumber(rackTargetPosition, rackRightButton, rackLeftButton, 0.0001, true)
+    local rackVelocity = (rackTargetPosition + rackOffset - rackPosition) * 5
 
     gripperPipeVelocity = ArchRampNumber(gripperPipeVelocity, adjustGripperUpButton, adjustGripperDownButton)
     joinerPipeVelocity = ArchRampNumber(joinerPipeVelocity, adjustJoinerUpButton, adjustJoinerDownButton)
 
-    if not wellHeadLocked then
-        bitWinchDown = drillMachine.currentStateId == DrillStates.Drill and bitDistance > headWinchPosition - 0.1
-    else
-        bitWinchDown = false
-    end
 
     outB(1, gripperRailUp, gripperRailDown, gripperClamp, connectorJoinButton, spindleUp, spindleDown, spindleLock,
-        slurryPump, bitWinchDown or bitWinchDownButton, bitWinchUpButton)
-    outN(1, gripperAngle, gripperPipeVelocity, joinerPipeVelocity, drillSpeed, barrelVelocity)
+        slurryPump)
+    outN(1, gripperAngle, gripperPipeVelocity, joinerPipeVelocity, drillSpeed, rackVelocity)
 
     -- Outputs for other scripts or for across the composite
     outN(20,
@@ -214,14 +208,4 @@ function onTick()
         rackIndex,
         rackPosition,
         rackTargetPosition)
-    outB(31, lockWellHead)
 end
-
--- function onDraw()
---     ArchMaroon()
---     local spacing = 7
---     screen.drawText(150, 0 * spacing, "bitWinchDown: " .. tostring(grabPipeButton))
---     screen.drawText(150, 1 * spacing, "drillState: " .. tostring(drillMachine.currentStateId))
---     screen.drawText(150, 2 * spacing, "bitDistance: " .. string.format("%.2f", bitDistance))
---     screen.drawText(150, 3 * spacing, "headWinchPosition: " .. string.format("%.2f", headWinchPosition))
--- end
