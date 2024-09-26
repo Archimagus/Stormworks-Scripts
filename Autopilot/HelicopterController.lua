@@ -1,3 +1,4 @@
+require("Autopilot.Autopilot")
 ArchUtils = ArchUtils or {}
 
 ---@class HelicopterController

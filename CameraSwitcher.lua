@@ -58,8 +58,8 @@ require("Utils.MyIoUtils")
 
 gridX = 11
 gridY = 7
-baseStyle.bg = Arch_DarkGray
-baseStyle.fg = Arch_Black
+baseStyle.bg = ArchDarkGray
+baseStyle.fg = ArchBlack
 baseStyle.drawBorder = false
 baseStyle.va = 0
 baseStyle.txo = 1
@@ -67,7 +67,7 @@ baseStyle.tyo = 0
 
 selectedSignal = math.floor(prN("Initial Camera")) or 1
 if selectedSignal == 0 then selectedSignal = 1 end
-inputs = propB("Input 1", "Input 2", "Input 3", "Input 4")
+inputs = propBNoUnpack("Input 1", "Input 2", "Input 3", "Input 4")
 useButtons = prB("Use Buttons")
 
 validSignals = {}
@@ -92,7 +92,7 @@ for k, v in ipairs(inputs) do
 	end
 end
 if not useButtons then
-	ss = addElement({ x = 0, y = 0, w = 1, st = { drawBG = false, fg = Green }, t = tostring(selectedSignal) })
+	ss = addElement({ x = 0, y = 0, w = 1, st = { drawBG = false, fg = ArchGreen }, t = tostring(selectedSignal) })
 end
 
 

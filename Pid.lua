@@ -19,15 +19,16 @@
 ---     This lets you share code between projects, and organise your work better.
 ---     The below, includes the content from SimulatorConfig.lua in the generated /_build/ folder
 --- (If you want to include code from other projects, press CTRL+COMMA, and add to the LifeBoatAPI library paths)
-require("Utils.MyPid")
+require("Utils.ArchPid")
+require("Utils.MyIoUtils")
 
-local myPid = PID:new(
-	property.getNumber("P") or 0.6,
-	property.getNumber("I") or 0,
-	property.getNumber("D") or 0.2,
-	property.getNumber("bias") or 0,
-	property.getNumber("minOutput") or -9999,
-	property.getNumber("maxOutput") or 9999
+local myPid = ArchPID:new(
+	propertyOrDefault("P", 0.6),
+	propertyOrDefault("I", 0),
+	propertyOrDefault("D", 0.2),
+	propertyOrDefault("minOutput", -9999),
+	propertyOrDefault("maxOutput", 9999),
+	propertyOrDefault("bias", 0)
 )
 
 function setPid()
@@ -36,26 +37,35 @@ function setPid()
 	d = input.getNumber(5)
 	minOutput = input.getNumber(6)
 	maxOutput = input.getNumber(7)
+	bias = input.getNumber(8)
 
 	if p ~= 0 or i ~= 0 or d ~= 0 then
-		myPid.p = p
-		myPid.i = i
-		myPid.d = d
+		myPid.P = p
+		myPid.I = i
+		myPid.D = d
 	end
 	if minOutput ~= 0 or maxOutput ~= 0 then
-		myPid.minOutput = minOutput
-		myPid.maxOutput = maxOutput
+		myPid.min = minOutput
+		myPid.max = maxOutput
+	end
+	if bias ~= 0 then
+		myPid.bias = bias
 	end
 end
 function onTick()
 	on = input.getBool(1)
 
+	-- reset = input.getBool(2)
+	-- if reset then
+	-- 	myPid:reset()
+	-- end
+
 	setPid()
 	
 	output.setBool(1, input.getBool(1))
-	output.setNumber(6, myPid.p)
-	output.setNumber(7, myPid.i)
-	output.setNumber(8, myPid.d)
+	output.setNumber(6, myPid.P)
+	output.setNumber(7, myPid.I)
+	output.setNumber(8, myPid.D)
 	if not on then
 		integral_prior = 0
 		output.setNumber(1, 0)

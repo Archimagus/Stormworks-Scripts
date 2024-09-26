@@ -1,27 +1,37 @@
-ArchUtils = ArchUtils or {}
+---@section AUTOPILOTBOILERPLATE
+--- Author: Archimagus
+--- An autopilot for use in various projects.
+--- Developed using LifeBoatAPI - Stormworks Lua plugin for VSCode - https://code.visualstudio.com/download (search 'Stormworks Lua with LifeboatAPI' extension)
+--- If you have any issues, please report them here: https://github.com/nameouschangey/STORMWORKS_VSCodeExtension/issues - by Nameous Changey
+---@endsection
 
 local WARMUP_FRAMES = 60
+
+---@section Autopilot
+require('Utils.ArchPid')
 
 ---@class Autopilot
 ---@field altitudePid ArchPID
 ---@field headingPid ArchPID
 ---@field targetAltitude number
----@field targetHeading number
 ---@field destinationX number
 ---@field destinationY number
+---@field targetHeading number
 ---@field physicsSensor PhysicsSensor
 ---@field goToDestination boolean
 ---@field waitFrames number
----@field eta number
 ---@field remainingDistance number
-ArchUtils.Autopilot = {
-    ---@param cls Autopilot
+---@field eta number
+---@field forwardPercentToDestination number
+---@field rightPercentToDestination number
+Autopilot = {
+    ---@param self Autopilot
     ---@param physicsSensor PhysicsSensor
     ---@return Autopilot
-    new = function(cls, physicsSensor)
-        local obj = LifeBoatAPI.lb_copy(cls, {
-            altitudePid = ArchUtils.ArchPID:new(0.05, 0.001, 0.05, -1, 1),
-            headingPid = ArchUtils.ArchPID:new(1, 0.1, 0.01, -1, 1),
+    new = function(self, physicsSensor)
+        local obj = LifeBoatAPI.lb_copy(self, {
+            altitudePid = ArchPID:new(0.05, 0.001, 0.05, -1, 1),
+            headingPid = ArchPID:new(1, 0.1, 0.01, -1, 1),
             targetAltitude = 0,
             destinationX = 0,
             destinationY = 0,
@@ -38,11 +48,12 @@ ArchUtils.Autopilot = {
     ---@param self Autopilot
     ---@param goToDestination boolean
     ---@return number, number
-    update = function(self, goToDestination, destinationX, destinationY)
+    update = function(self, goToDestination, targetAltitude, destinationX, destinationY)
         self.physicsSensor:read()
         local currentAltitude = self.physicsSensor.altitude
         local currentHeading = self.physicsSensor.heading
 
+        self.targetAltitude = targetAltitude
         self.destinationX = destinationX
         self.destinationY = destinationY
 
@@ -55,37 +66,40 @@ ArchUtils.Autopilot = {
             end
         end
 
-        local altitudeError = self.targetAltitude - currentAltitude
+        -- Calculate direction to destination
+        local dx = self.destinationX - self.physicsSensor.x
+        local dy = self.destinationY - self.physicsSensor.y
+        local distance = math.sqrt(dx * dx + dy * dy)
+
+        -- Calculate forward and right vectors
+        local heading = self.physicsSensor.heading
+        local forwardX, forwardY = math.sin(heading), math.cos(heading)
+        local rightX, rightY = math.cos(heading), -math.sin(heading)
 
         if goToDestination then
-            -- Calculate the target heading based on current position and destination
-            local dx = self.destinationX - self.physicsSensor.x
-            local dy = self.destinationY - self.physicsSensor.y
             self.targetHeading = math.atan(dx, dy)
-            self.remainingDistance = math.sqrt(dx * dx + dy * dy)
-            self.eta = self.remainingDistance / self.physicsSensor.forwardVelocity
         elseif self.goToDestination then
             self.targetHeading = currentHeading
         end
         self.goToDestination = goToDestination
 
+        if self.destinationX ~= 0 or self.destinationY ~= 0 or self.goToDestination then
+            self.remainingDistance = distance
+            self.eta = distance / self.physicsSensor.forwardVelocity
+            self.forwardPercentToDestination = dx * forwardX + dy * forwardY
+            self.rightPercentToDestination = dx * rightX + dy * rightY
+        else
+            self.remainingDistance = 0
+            self.eta = 0
+            self.forwardPercentToDestination = 0
+            self.rightPercentToDestination = 0
+        end
         local headingError = LifeBoatAPI.LBMaths.lbmaths_angularSubtract(self.targetHeading, currentHeading)
 
-        local altitudeControl = -self.altitudePid:update(altitudeError, 0)
-        local headingControl = -self.headingPid:update(headingError, 0)
+        local altitudeControl = self.altitudePid:update(self.targetAltitude, currentAltitude)
+        local headingControl = -self.headingPid:update(0, headingError)
 
         return altitudeControl, headingControl
     end,
-
-    ---@param self Autopilot
-    ---@param altitude number
-    setTargetAltitude = function(self, altitude)
-        self.targetAltitude = altitude
-    end,
-
-    ---@param self Autopilot
-    ---@param heading number
-    setTargetHeading = function(self, heading)
-        self.targetHeading = heading
-    end
 }
+---@endsection

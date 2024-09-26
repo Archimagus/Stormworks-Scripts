@@ -1,3 +1,12 @@
+---@section MYIOUTILSBOILERPLATE
+--- Author: Archimagus
+--- Some basic utilities for input and output.
+--- Developed using LifeBoatAPI - Stormworks Lua plugin for VSCode - https://code.visualstudio.com/download (search 'Stormworks Lua with LifeboatAPI' extension)
+--- If you have any issues, please report them here: https://github.com/nameouschangey/STORMWORKS_VSCodeExtension/issues - by Nameous Changey
+---@endsection
+
+
+
 ---@section I
 --- Alias for the input module.
 I = input
@@ -46,7 +55,7 @@ tI = table.insert
 ---@section propN
 --- Function to get multiple number properties at once.
 --- @param ... string Variable number of property keys to get values for.
---- @return ... Multiple number properties.
+--- @return number... Multiple number properties.
 function propN(...)
 	local a = {}
 	for b, c in ipairs({ ... }) do a[b] = P.getNumber(c) end; return tU(a)
@@ -57,10 +66,21 @@ end
 ---@section propB
 --- Function to get multiple boolean properties at once.
 --- @param ... string Variable number of property keys to get values for.
---- @return ... Multiple boolean properties.
+--- @return boolean... Values Multiple boolean properties.
 function propB(...)
 	local a = {}
 	for b, c in ipairs({ ... }) do a[b] = P.getBool(c) end; return tU(a)
+end
+
+---@endsection
+---@
+---@section propB
+--- Function to get multiple boolean properties at once.
+--- @param ... string Variable number of property keys to get values for.
+--- @return table Values Table containing multiple boolean properties.
+function propBNoUnpack(...)
+	local a = {}
+	for b, c in ipairs({ ... }) do a[b] = P.getBool(c) end; return a
 end
 
 ---@endsection
@@ -68,10 +88,13 @@ end
 ---@section getN
 --- Function to get multiple input numbers at once.
 --- @param ... number Variable number of input keys to get values for.
---- @return ... Multiple input numbers.
+--- @return ...number Multiple input numbers.
 function getN(...)
 	local a = {}
-	for b, c in ipairs({ ... }) do a[b] = I.getNumber(c) end; return tU(a)
+	for b, c in ipairs({ ... }) do
+		a[b] = I.getNumber(c) or 0 -- Default to 0 if input is nil
+	end
+	return tU(a)
 end
 
 ---@endsection
@@ -79,7 +102,7 @@ end
 ---@section getB
 --- Function to get multiple input booleans at once.
 --- @param ... number Variable number of input keys to get values for.
---- @return ... Multiple input booleans.
+--- @return ...boolean Multiple input booleans.
 function getB(...)
 	local a = {}
 	for b, c in ipairs({ ... }) do a[b] = I.getBool(c) end; return tU(a)
@@ -126,3 +149,16 @@ function forwardNumbers(i, o, n)
 		O.setNumber(o + j, I.getNumber(i + j))
 	end
 end
+---@endsection
+---@section propertyOrDefault
+---@param propertyName string
+---@param defaultValue number
+---@return number
+function propertyOrDefault(propertyName, defaultValue)
+    local value = P.getNumber(propertyName)
+    if value == nil or value == 0 then
+        value = defaultValue
+    end
+    return value
+end
+---@endsection

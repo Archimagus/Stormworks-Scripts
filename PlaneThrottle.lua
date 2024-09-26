@@ -34,57 +34,35 @@ end
 -- try require("Folder.Filename") to include code from another file in this, so you can store code in libraries
 -- the "LifeBoatAPI" is included by default in /_build/libs/ - you can use require("LifeBoatAPI") to get this, and use all the LifeBoatAPI.<functions>!
 
-require("Utils.MyBasicUtils")
-require("Utils.MyPid")
+throttleSensetivity = property.getNumber("Throttle Sensitivity") or 0.25
+minRps = property.getNumber("Idle RPS") or 10   
+lowRps = property.getNumber("Plane Low RPS") or 50         
+maxRps = property.getNumber("Plane Max RPS") or 100               
+targetRps = 0
 
-throttleSensetivity = property.getNumber("Cruise Control Sensitivity") or 0.25 -- Cruise Control sensitivity
-maxCruiseSpeed = property.getNumber("Max Cruise Speed") or 70                       -- Max cruise speed
-maxReverseSpeed = property.getNumber("Max Reverse Speed") or -10                    -- Max reverse speed
-P = property.getNumber("P") or 0.1
-I = property.getNumber("I") or 0.00001
-D = property.getNumber("D") or 0.001
-cruisePID = MyUtils.PID:new(P, I, D, 0, -1, 1)
-targetSpeed = 0
-reverse = false
-throttleDetent = false
-everDetent = false
-
+function clamp(number, min, max)
+	min = min or 0
+	max = max or 1
+	return math.min(math.max(number, min), max)
+end
 function onTick()
-	local ti = input.getNumber(2)
-	local speed = input.getNumber(10)
+	local throttleUp = input.getBool(1)
+	local throttleDown = input.getBool(2)
+	local resetToLowRps = input.getBool(3)
+	local enabled = input.getBool(4)
 
-	-- if throttle input is 0 and targetSpeed is 0, reset the throttle detent
-	if ti == 0 then
-		throttleDetent = false
+	if enabled then
+		if resetToLowRps then
+			targetRps = lowRps
+		end	
+		if throttleUp then
+			targetRps = targetRps + throttleSensetivity
+		end
+		if throttleDown then
+			targetRps = targetRps - throttleSensetivity
+		end
+		targetRps = clamp(targetRps, minRps, maxRps)
 	end
 
-	local target = clamp(targetSpeed + ti * throttleSensetivity, maxReverseSpeed, maxCruiseSpeed)
-
-	-- if target speed is about to cross 0, set it to 0
-	if (ti ~= 0 and target == 0) or targetSpeed * target < 0 then
-		throttleDetent = true
-		everDetent = true
-	end
-
-	if throttleDetent then
-		targetSpeed = 0
-	else
-		targetSpeed = target
-	end
-
-	local throttle = cruisePID:update(targetSpeed, speed)
-	if targetSpeed == 0 then
-		throttle = 0
-	end
-	reverse = throttle < -0.01
-	output.setNumber(1, throttle)
-
-	output.setNumber(2, targetSpeed)
-
-	output.setNumber(3, speed)
-	output.setNumber(4, ti)
-
-	output.setBool(1, reverse)
-	output.setBool(2, throttleDetent)
-	output.setBool(3, everDetent)
+	output.setNumber(1, targetRps)
 end

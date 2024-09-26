@@ -1,4 +1,11 @@
-require("LifeBoatAPI.Utils.LBCopy")
+---@section MYBASICUTILSBOILERPLATE
+--- Author: Archimagus
+--- Some basic utilities that are used in multiple projects.
+--- Developed using LifeBoatAPI - Stormworks Lua plugin for VSCode - https://code.visualstudio.com/download (search 'Stormworks Lua with LifeboatAPI' extension)
+--- If you have any issues, please report them here: https://github.com/nameouschangey/STORMWORKS_VSCodeExtension/issues - by Nameous Changey
+---@endsection
+
+require('LifeBoatAPI.Utils.LBCopy')
 
 ---@section ArchPulse
 ---@class ArchPulse Pulse a boolean for a single frame.
@@ -19,12 +26,18 @@ ArchPulse = {
 
 ---@section ArchToggle
 ---@class ArchToggle Push to toggle a boolean value.
+
 ArchToggle = {
+	---@param self ArchToggle
+	---@param initial boolean The initial value. Defaults to false.
+	---@return ArchToggle
 	new = function(self, initial)
-		return LifeBoatAPI.lb_copy(self, {
-			value = initial,
-			last_input = false
-		})
+		---@type ArchToggle
+		local instance = LifeBoatAPI.lb_copy(self, {
+			value = initial or false,
+			last_input = initial or false
+		}) --[[@as ArchToggle]]
+		return instance
 	end,
 	--- Check if the input has become true this frame and toggle the value if it has
 	--- @param self ArchToggle

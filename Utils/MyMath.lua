@@ -1,3 +1,13 @@
+---@section MYMATHBOILERPLATE
+-- Author: Archimagus
+--- Developed using LifeBoatAPI - Stormworks Lua plugin for VSCode - https://code.visualstudio.com/download (search 'Stormworks Lua with LifeboatAPI' extension)
+--- If you have any issues, please report them here: https://github.com/nameouschangey/STORMWORKS_VSCodeExtension/issues - by Nameous Changey
+---@endsection
+
+---@section deltaTime
+deltaTime = 1 / 60
+---@endsection
+
 ---@section clamp
 -- Clamp a number between a minimum and maximum value (0-1) by default.
 ---@param number number The number to clamp.

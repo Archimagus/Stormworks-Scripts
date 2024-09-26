@@ -1,3 +1,10 @@
+---@section PHYSICSENSORBOILERPLATE
+--- Author: Archimagus
+--- Utilities for reading physics sensor data.
+--- Developed using LifeBoatAPI - Stormworks Lua plugin for VSCode - https://code.visualstudio.com/download (search 'Stormworks Lua with LifeboatAPI' extension)
+--- If you have any issues, please report them here: https://github.com/nameouschangey/STORMWORKS_VSCodeExtension/issues - by Nameous Changey
+---@endsection
+
 --- Physics sensor inputs
 -- Input 1 to 3 (Number): X, Y and Z position of the block
 -- Input 4 to 6 (Number): Euler rotation X, Y and Z of the block
@@ -9,10 +16,12 @@
 -- Input 16 (Number): Local X tilt (roll)
 -- Input 17 (Number): Compass heading (-0.5 to 0.5)
 
+---@section PhysicsSensor
 
-require("Utils")
-require("LifeBoatAPI")
+require('Utils.MyIoUtils')
+require('LifeBoatAPI')
 
+---@diagnostic disable: duplicate-doc-field
 ---@class PhysicsSensor
 ---@field x number -- World X position
 ---@field y number -- World Y position
@@ -29,11 +38,11 @@ require("LifeBoatAPI")
 ---@field yawVelocity number -- Local yaw velocity
 ---@field rawHeading number -- Raw heading
 ---@field read function -- Call during update to read the sensor
-ArchUtils.PhysicsSensor = {
-    ---@param cls PhysicsSensor
+PhysicsSensor = {
+    ---@param self PhysicsSensor
     ---@return PhysicsSensor
-    new = function(cls)
-        local obj = LifeBoatAPI.lb_copy(cls, {
+    new = function(self)
+        local obj = LifeBoatAPI.lb_copy(self, {
             x = 0,
             y = 0,
             altitude = 0,
@@ -74,3 +83,4 @@ ArchUtils.PhysicsSensor = {
         self.yawVelocity = RVY
     end
 }
+---@endsection

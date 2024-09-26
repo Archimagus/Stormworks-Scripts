@@ -1,13 +1,29 @@
+---@section MYUITOOLSBOILERPLATE
+--- Author: Archimagus
+--- Utilities for drawing gride based UI.
+--- Developed using LifeBoatAPI - Stormworks Lua plugin for VSCode - https://code.visualstudio.com/download (search 'Stormworks Lua with LifeboatAPI' extension)
+--- If you have any issues, please report them here: https://github.com/nameouschangey/STORMWORKS_VSCodeExtension/issues - by Nameous Changey
+---@endsection
+
 ---@diagnostic disable: duplicate-doc-field
-require("LifeBoatAPI.Utils.LBCopy")
-require("Utils.MyIoUtils")
+require('LifeBoatAPI.Utils.LBCopy')
+require('Utils.MyIoUtils')
+---@section drawTextBox
 drawTextBox = screen.drawTextBox
+---@endsection
+---@section drawRect
 drawRect = screen.drawRect
+---@endsection
+---@section drawFilledRect
 drawFilledRect = screen.drawRectF
+---@endsection
+
+---@section sC
 -- sC = screen.setColor
 sC = function(r, g, b)
 	screen.setColor(r, g, b)
 end
+---@endsection
 
 
 ---@section print
@@ -23,6 +39,7 @@ function inRect(x, y, a, b, w, h) return x > a and y > b and x < a + w and y < b
 function ArchBlack() sC(0, 0, 0) end
 
 ---@endsection
+---@
 ---@section ArchWhite
 function ArchWhite() sC(255, 255, 255) end
 
@@ -175,6 +192,8 @@ elements = {}
 ---@field cf function|nil click function (if not nil will be clickable and called on click)
 ---@field hf function|nil optional hold function (if not nil will be clickable and called while held)
 ---@field uf function|nil optional update function (if not nil will be called every frame)
+---@field fillHeight number|nil fill height of element
+---@field fillWidth number|nil fill width of element
 
 ---@function addElement
 ---@param e table
@@ -184,7 +203,7 @@ function addElement(e)
 	e.y = e.y or 0
 	e.w = e.w or 1
 	e.h = e.h or 1
-	e.t = e.t or ""
+	e.t = e.t or ''
 	e.visible = e.visible
 	--e.st style override
 	--e.tg  make button toggle
@@ -208,10 +227,10 @@ end
 
 -- ADD ELEMENTS HERE
 -- time=0
--- addElement({x=1, y=1, t="A", cf=function(b) outB(2,true) end})
--- addElement({x=2, y=1, t="B", cf=function(b) outB(2,false) end})
--- addElement({x=3, y=1, h=2, t="CW", tg=false})
--- addElement({x=1, y=3, w=2, t="TX", tg=false,
+-- addElement({x=1, y=1, t='A', cf=function(b) outB(2,true) end})
+-- addElement({x=2, y=1, t='B', cf=function(b) outB(2,false) end})
+-- addElement({x=3, y=1, h=2, t='CW', tg=false})
+-- addElement({x=1, y=3, w=2, t='TX', tg=false,
 -- 	uf=function(b) outB(1,b.tg) end -- Output true on channel if button is toggled
 -- })
 -- addElement({x=1, y=4, w=4,
@@ -220,7 +239,7 @@ end
 -- 		b.fillHeight = math.abs(math.sin(time))
 -- 	end
 -- })
--- addElement({x=1, y=5, w=4,t="label"})
+-- addElement({x=1, y=5, w=4,t='label'})
 
 ---@section clickB
 function clickB(b) if b.cf then b:cf() end end

@@ -7,8 +7,8 @@ require("Utils.MyPid")
 require("Utils.MyIoUtils")
 require("Utils.MyMath")
 
-cruiseControlSensitivity = property.getNumber("Cruise Control Sensitivity") or 0.25
-maxCruiseSpeed = property.getNumber("Max Cruise Speed") or 100
+throttleSensetivity = property.getNumber("Cruise Control Sensitivity") or 0.25
+maxRps = property.getNumber("Max Cruise Speed") or 100
 autoReverse = property.getBool("Auto Reverse")
 
 
@@ -20,7 +20,7 @@ cruisePulse = ArchPulse:new()
 cruiseControl = false
 
 cruisePID = MyUtils.PID:new(CP, CI, CD, 0, -1, 1)
-targetSpeed = maxCruiseSpeed
+targetSpeed = maxRps
 reverse = false
 
 
@@ -88,7 +88,7 @@ function onTick()
 
 	local throttle = throttleInput
 	if cruiseControl then
-		targetSpeed = clamp(targetSpeed + throttle * cruiseControlSensitivity, 0, maxCruiseSpeed)
+		targetSpeed = clamp(targetSpeed + throttle * throttleSensetivity, 0, maxRps)
 		throttle = cruisePID:update(targetSpeed, speed)
 	else
 		targetSpeed = speed + throttle * 2
@@ -170,8 +170,9 @@ function onTick()
 end
 
 function calculateAckermannSteering(desiredSteering)
+	local dampenedSteering = desiredSteering * desiredSteering * desiredSteering
 	-- Convert desired steering to radians (scaled by max steering angle of 0.8)
-	local desiredSteeringAngle = desiredSteering * 0.8 * math.pi / 2
+	local desiredSteeringAngle = dampenedSteering * math.pi / 2
 
 	-- Calculate turning radius
 	local turningRadius = wheelBase / math.tan(desiredSteeringAngle)

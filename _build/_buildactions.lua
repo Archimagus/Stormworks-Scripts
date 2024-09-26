@@ -67,9 +67,14 @@ function onLBBuildFileComplete(rootPath, name, inputFile, minimizedText, inputTe
 	-- 	LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
 	-- end
 
-	if name == "BoatThrottle.lua" then
-		targetPath = LifeBoatAPI.Tools.Filepath:new(
-			"D:/repos/Stormworks/Workspace/Salvage Rescue Ship/Boat Throttle/56/script.lua")
-		LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
-	end
+	-- if name == "BoatThrottle.lua" then
+	-- 	targetPath = LifeBoatAPI.Tools.Filepath:new(
+	-- 		"D:/repos/Stormworks/Workspace/Salvage Rescue Ship/Boat Throttle/56/script.lua")
+	-- 	LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
+	-- end
+	-- if name == "FlightControls-TiltRotor.lua" then
+	-- 	targetPath = LifeBoatAPI.Tools.Filepath:new(
+	-- 		"D:/repos/Stormworks/Workspace/Peregrine WIP/Tilt Rotor Controller Mk2 MC/29/script.lua")
+	-- 	LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
+	-- end
 end

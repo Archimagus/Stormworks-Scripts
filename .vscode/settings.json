@@ -38,8 +38,8 @@
   "Lua.runtime.pathStrict": true,
   "Lua.workspace.library": [
     "d:/repos/Stormworks/Scripts/",
-    "c:/Users/Archimagus/.vscode/extensions/nameouschangey.lifeboatapi-0.0.33/assets/lua/Common/",
-    "c:/Users/Archimagus/.vscode/extensions/nameouschangey.lifeboatapi-0.0.33/assets/lua/Microcontroller/",
+    "c:/Users/Archimagus/.cursor/extensions/nameouschangey.lifeboatapi-0.0.33/assets/lua/Common/",
+    "c:/Users/Archimagus/.cursor/extensions/nameouschangey.lifeboatapi-0.0.33/assets/lua/Microcontroller/",
     "d:/repos/Stormworks/Scripts/_build/libs/"
   ],
   "lifeboatapi.stormworks.libs.gitLibraries": [

@@ -4,51 +4,67 @@
 --
 --- Developed using LifeBoatAPI - Stormworks Lua plugin for VSCode - https://code.visualstudio.com/download (search "Stormworks Lua with LifeboatAPI" extension)
 --- If you have any issues, please report them here: https://github.com/nameouschangey/STORMWORKS_VSCodeExtension/issues - by Nameous Changey
+local averageTime = property.getNumber("Average Time In Seconds")
+local samplesPerSecond = 60
+local maxTicks = averageTime * samplesPerSecond
 
+lb_copy = function(from, to, overwrite)
+	to = to or {}
+	for k, v in pairs(from) do
+		to[k] = not overwrite and to[k] or v -- underwrites, so the original values are kept if they existed
+	end
+	return to
+end;
 
---[====[ HOTKEYS ]====]
--- Press F6 to simulate this file
--- Press F7 to build the project, copy the output from /_build/out/ into the game to use
--- Remember to set your Author name etc. in the settings: CTRL+COMMA
+---@class LBRollingAverage
+---@field maxValues number number of values this rolling average holds
+---@field values number[] list of values to be averaged
+---@field average number current average of the values that have been added
+---@field count number number of values currently being averaged
+---@field sum number total of the currently tracked values
+LBRollingAverage = {
 
+	---@param cls LBRollingAverage
+	---@param maxValues number number of values this rolling average holds
+	---@return LBRollingAverage
+	new = function(cls, maxValues)
+		return lb_copy(cls, {
+			values = {},
+			maxValues = maxValues or math.maxinteger,
+			index = 1
+		})
+	end,
 
---[====[ EDITABLE SIMULATOR CONFIG - *automatically removed from the F7 build output ]====]
----@section __LB_SIMULATOR_ONLY__
-do
-    ---@type Simulator -- Set properties and screen sizes here - will run once when the script is loaded
-    simulator = simulator
-    simulator:setProperty("Average Consumption Time In Seconds", 5)
-	local start = 5000
-    -- Runs every tick just before onTick allows you to simulate the inputs changing
-    ---@param simulator Simulator Use simulator:<function>() to set inputs etc.
-    ---@param ticks     number Number of ticks since simulator started
-    function onLBSimulatorTick(simulator, ticks)
+	---Add a value to the rolling average
+	---@param self LBRollingAverage
+	---@param value number value to add into the rolling average
+	---@return number average the current rolling average (also accessible via .average)
+	lbrollingaverage_addValue = function(self, value)
+		self.values[(self.index % self.maxValues) + 1] = value
+		self.index = self.index + 1
+		self.count = math.min(self.index, self.maxValues)
+		self.sum = 0
+		for _, v in ipairs(self.values) do self.sum = self.sum + v end
+		self.average = self.sum / self.count
+		return self.average
+	end,
 
-		start = start - ((math.random(75, 100)-1)/60)
-        simulator:setInputNumber(1, start)
-    end
-end
----@endsection
+	---Update the max values of the rolling average
+	---@param self LBRollingAverage
+	---@param maxValues number number of values this rolling average holds
+	updateMaxValues = function(self, maxValues)
+		if maxValues == self.maxValues then return end
+		self.maxValues = maxValues
+		self.values = {}
+		self.index = 1
+	end
+}
 
-
---[====[ IN-GAME CODE ]====]
-
--- try require("Folder.Filename") to include code from another file in this, so you can store code in libraries
--- the "LifeBoatAPI" is included by default in /_build/libs/ - you can use require("LifeBoatAPI") to get this, and use all the LifeBoatAPI.<functions>!
-require("LifeBoatAPI.Maths.LBRollingAverage")
-
-	local averageTime = property.getNumber("Average Consumption Time In Seconds")
-	local samplesPerSecond = 60
-	local maxTicks=averageTime*samplesPerSecond
-	local average = LifeBoatAPI.LBRollingAverage:new(maxTicks)
-	local level = 0
+local average = LBRollingAverage:new(maxTicks)
 function onTick()
-    local number = input.getNumber(1)
-	if level == 0 then level = number end
-	local diff = level-number
-	level = number
-	local avg = average:lbrollingaverage_addValue(diff)
-	avg = avg*samplesPerSecond*100
-	avg = math.floor(avg+0.5)/100
+	local number = input.getNumber(1)
+	local avgTime = input.getNumber(2)
+	if avgTime ~= 0 then average:updateMaxValues(avgTime * samplesPerSecond) end
+	local avg = average:lbrollingaverage_addValue(number)
 	output.setNumber(1, avg)
 end

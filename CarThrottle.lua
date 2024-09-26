@@ -40,8 +40,8 @@ require("Utils.MyPid")
 throttleType = property.getBool("Throttle Type") or 0                               -- 0 = Absolute, 1 = Signed
 throttleInput = property.getNumber("Throttle Input") or 2                           -- Throttle input number (W/S = 2)
 cruiseControlInput = property.getNumber("Cruse Control Input") or 2                 -- Cruise Control input number
-cruiseControlSensitivity = property.getNumber("Cruise Control Sensitivity") or 0.25 -- Cruise Control sensitivity
-maxCruiseSpeed = property.getNumber("Max Cruise Speed") or 100                      -- Max cruise speed
+throttleSensetivity = property.getNumber("Cruise Control Sensitivity") or 0.25 -- Cruise Control sensitivity
+maxRps = property.getNumber("Max Cruise Speed") or 100                      -- Max cruise speed
 speedInput = property.getNumber("Speed Input") or 5                                 -- Speed input number
 eBrakeInput = property.getNumber("E-Brake Input") or 31                             -- E-Brake input number (Space = 31)
 
@@ -53,7 +53,7 @@ cruisePulse = ArchPulse:new()
 cruiseControl = false
 
 cruisePID = MyUtils.PID:new(P, I, D, 0, -1, 1)
-targetSpeed = maxCruiseSpeed
+targetSpeed = maxRps
 reverse = false
 
 function onTick()
@@ -65,12 +65,12 @@ function onTick()
 	local occupied = input.getBool(32)
 	if cp then
 		cruiseControl = not cruiseControl
-		targetSpeed = cruiseControl and speed or maxCruiseSpeed
+		targetSpeed = cruiseControl and speed or maxRps
 	end
 
 	local throttle = ti
 	if cruiseControl then
-		targetSpeed = clamp(targetSpeed + throttle * cruiseControlSensitivity, 0, maxCruiseSpeed)
+		targetSpeed = clamp(targetSpeed + throttle * throttleSensetivity, 0, maxRps)
 		throttle = cruisePID:update(targetSpeed, speed)
 	else
 		targetSpeed = speed + throttle * 2
