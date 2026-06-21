@@ -35,8 +35,8 @@ function calculateAckermannSteering(desiredSteering)
 	-- Apply easing function based on the easeType property
 	local easedSteering = applyEasing(desiredSteering)
 
-	-- Convert eased steering to radians (scaled by max steering angle of 0.8)
-	local desiredSteeringAngle = easedSteering * math.pi / 2
+	-- Convert eased steering to radians (scaled by max steering angle of 0.8 to accout for ackermann steering geometry)
+	local desiredSteeringAngle = easedSteering * 0.8 * math.pi / 2
 
 	-- Calculate turning radius
 	local turningRadius = wheelBase / math.tan(desiredSteeringAngle)

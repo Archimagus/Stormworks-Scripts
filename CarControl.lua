@@ -39,6 +39,13 @@ trackWidthBlocks = property.getNumber("Track Width Blocks") or 9
 wheelBase = (wheelBaseBlocks - 1) * 0.25   -- -1 because the axle is in the middle of the blocks
 trackWidth = (trackWidthBlocks - 1) * 0.25 -- -1 because the center line is in the middle of the blocks
 
+-- Easing function to apply to the steering input
+local easeType = property.getText("Ease Type") or "Cubic"
+-- Some vehicles have the wheels on diferently.
+local invertSteering = property.getBool("Invert Steering") or false
+
+local brakeEasing = property.getText("Brake Easing") or "Cubic"
+local brakeEasingFactor = property.getNumber("Brake Easing Factor") or 1
 
 function onTick()
 	local steering = input.getNumber(1)
@@ -97,8 +104,8 @@ function onTick()
 
 	local braking = 0
 	local throttleOut = 0
-	if (abs(speed) < 1 and abs(throttle) < 0.1) then
-		braking = 1
+	if (math.abs(speed) < 1 and math.abs(throttle) < 0.1) then
+		braking = applyEasing(1, brakeEasing)
 	elseif autoReverse then
 		if sign(speed) ~= sign(throttleInput) then
 			braking = math.abs(throttleInput)
@@ -142,6 +149,10 @@ function onTick()
 	local clutchUpper = clamp(clutchUpper)
 
 	local leftWheelSteer, rightWheelSteer = calculateAckermannSteering(steering)
+	if invertSteering then
+		leftWheelSteer = -leftWheelSteer
+		rightWheelSteer = -rightWheelSteer
+	end
 
 	outN(1
 	, throttleOut  -- 1
@@ -170,9 +181,11 @@ function onTick()
 end
 
 function calculateAckermannSteering(desiredSteering)
-	local dampenedSteering = desiredSteering * desiredSteering * desiredSteering
-	-- Convert desired steering to radians (scaled by max steering angle of 0.8)
-	local desiredSteeringAngle = dampenedSteering * math.pi / 2
+	-- Apply easing function based on the easeType property
+	local easedSteering = applyEasing(desiredSteering, easeType)
+
+	-- Convert desired steering to radians (scaled by max steering angle of 0.8 to accout for ackermann steering geometry)
+	local desiredSteeringAngle = easedSteering * 0.8 * math.pi / 2
 
 	-- Calculate turning radius
 	local turningRadius = wheelBase / math.tan(desiredSteeringAngle)
@@ -187,4 +200,25 @@ function calculateAckermannSteering(desiredSteering)
 
 	-- invert the left wheel steer because of mirroring oddness
 	return -leftWheelSteer, rightWheelSteer
+end
+
+-- Apply easing function based on the easeType property
+---@param input number
+---@param localEaseType string
+---@return number
+function applyEasing(input, localEaseType)
+	if localEaseType == "Linear" then
+		return input
+	elseif localEaseType == "Quadratic" then
+		return input * math.abs(input)
+	elseif localEaseType == "Cubic" then
+		return input * input * input
+	elseif localEaseType == "Sine" then
+		return sign(input) * (1 - math.cos((input * math.pi) / 2))
+	elseif localEaseType == "Circular" then
+		return 1 - math.sqrt(1 - input * input)
+	else
+		-- Default to Linear if an invalid easeType is provided
+		return input
+	end
 end

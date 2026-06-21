@@ -38,8 +38,8 @@ require("Utils.MyBasicUtils")
 require("Utils.MyPid")
 
 throttleSensetivity = property.getNumber("Cruise Control Sensitivity") or 0.25 -- Cruise Control sensitivity
-maxCruiseSpeed = property.getNumber("Max Cruise Speed") or 70                       -- Max cruise speed
-maxReverseSpeed = property.getNumber("Max Reverse Speed") or -10                    -- Max reverse speed
+maxCruiseSpeed = property.getNumber("Max Cruise Speed") or 70                  -- Max cruise speed
+maxReverseSpeed = property.getNumber("Max Reverse Speed") or -10               -- Max reverse speed
 P = property.getNumber("P") or 0.1
 I = property.getNumber("I") or 0.00001
 D = property.getNumber("D") or 0.001
@@ -73,8 +73,13 @@ function onTick()
 	end
 
 	local throttle = cruisePID:update(targetSpeed, speed)
-	if targetSpeed == 0 then
+	if (targetSpeed > 0) then
+		throttle = clamp(throttle, 0, 1)
+	elseif (targetSpeed < 0) then
+		throttlse = clamp(throttle, -1, 0)
+	else
 		throttle = 0
+		cruisePID:reset()
 	end
 	reverse = throttle < -0.01
 	output.setNumber(1, throttle)

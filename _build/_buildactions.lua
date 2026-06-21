@@ -56,6 +56,11 @@ function onLBBuildFileComplete(rootPath, name, inputFile, minimizedText, inputTe
 	-- 		"D:/repos/Stormworks/Workspace/Hatchback CVT NewController/Car Controls MC/23/script.lua")
 	-- 	LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
 	-- end
+	if name == "CarControl.lua" then
+		targetPath = LifeBoatAPI.Tools.Filepath:new(
+			"D:/repos/Stormworks/Workspace/Hot Hatch Test/Car Controls MC/23/script.lua")
+		LifeBoatAPI.Tools.FileSystemUtils.writeAllText(targetPath, minimizedText)
+	end
 	-- if name == "CarControl.lua" then
 	-- 	targetPath = LifeBoatAPI.Tools.Filepath:new(
 	-- 		"D:/repos/Stormworks/Workspace/Python Fisher/ThrottleCVT Controls/23/script.lua")
