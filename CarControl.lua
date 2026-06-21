@@ -7,14 +7,16 @@ require("Utils.MyPid")
 require("Utils.MyIoUtils")
 require("Utils.MyMath")
 
-throttleSensetivity = property.getNumber("Cruise Control Sensitivity") or 0.25
-maxRps = property.getNumber("Max Cruise Speed") or 100
+throttleSensetivity = propertyOrDefault("Cruise Control Sensitivity", 0.25)
+maxRps = propertyOrDefault("Max Cruise Speed", 100)
 autoReverse = property.getBool("Auto Reverse")
+stopSpeed = 1
+throttleDeadband = 0.1
 
 
-CP = property.getNumber("Cruise P") or 0.1
-CI = property.getNumber("Cruise I") or 0.00001
-CD = property.getNumber("Cruise D") or 0.001
+CP = propertyOrDefault("Cruise P", 0.1)
+CI = propertyOrDefault("Cruise I", 0.00001)
+CD = propertyOrDefault("Cruise D", 0.001)
 
 cruisePulse = ArchPulse:new()
 cruiseControl = false
@@ -24,28 +26,28 @@ targetSpeed = maxRps
 reverse = false
 
 
-accelerationRps = property.getNumber("Acceleration RPS") or 15
-cruiseRps = property.getNumber("Cruise RPS") or 8
-minRps = property.getNumber("Idle RPS") or 5
-TP = property.getNumber("CVT P") or 0.01
-TI = property.getNumber("CVT I") or 0.00001
-TD = property.getNumber("CVT D") or 0.001
+accelerationRps = propertyOrDefault("Acceleration RPS", 15)
+cruiseRps = propertyOrDefault("Cruise RPS", 8)
+minRps = propertyOrDefault("Idle RPS", 5)
+TP = propertyOrDefault("CVT P", 0.01)
+TI = propertyOrDefault("CVT I", 0.00001)
+TD = propertyOrDefault("CVT D", 0.001)
 
 cvtPid = MyUtils.PID:new(TP, TI, TD, 0, 0, 1)
 -- Distance between front and rear axle in blocks (inclusive)
-wheelBaseBlocks = property.getNumber("Wheel Base Blocks") or 15
+wheelBaseBlocks = propertyOrDefault("Wheel Base Blocks", 15)
 -- Distance between the center lines of the left and right wheels in blocks
-trackWidthBlocks = property.getNumber("Track Width Blocks") or 9
+trackWidthBlocks = propertyOrDefault("Track Width Blocks", 9)
 wheelBase = (wheelBaseBlocks - 1) * 0.25   -- -1 because the axle is in the middle of the blocks
 trackWidth = (trackWidthBlocks - 1) * 0.25 -- -1 because the center line is in the middle of the blocks
 
+steeringReductionSpeed = propertyOrDefault("Steering Reduction Speed", 75)
+minSteeringAtSpeed = propertyOrDefault("Min Steering At Speed", 0.35)
+ackermannInnerRadiusMargin = 0.1
 -- Easing function to apply to the steering input
-local easeType = property.getText("Ease Type") or "Cubic"
+easeType = property.getText("Steering Ease Type") or "Cubic"
 -- Some vehicles have the wheels on diferently.
-local invertSteering = property.getBool("Invert Steering") or false
-
-local brakeEasing = property.getText("Brake Easing") or "Cubic"
-local brakeEasingFactor = property.getNumber("Brake Easing Factor") or 1
+ invertSteering = property.getBool("Invert Steering") or false
 
 function onTick()
 	local steering = input.getNumber(1)
@@ -91,6 +93,7 @@ function onTick()
 	if cp then
 		cruiseControl = not cruiseControl
 		targetSpeed = cruiseControl and speed or 0
+		cruisePID:reset()
 	end
 
 	local throttle = throttleInput
@@ -104,18 +107,23 @@ function onTick()
 
 	local braking = 0
 	local throttleOut = 0
-	if (math.abs(speed) < 1 and math.abs(throttle) < 0.1) then
-		braking = applyEasing(1, brakeEasing)
+	if math.abs(speed) < stopSpeed then
+		if math.abs(throttle) < throttleDeadband then
+			braking = 1
+		else
+			throttleOut = math.abs(throttle)
+			reverse = throttleInput < 0
+		end
 	elseif autoReverse then
-		if sign(speed) ~= sign(throttleInput) then
-			braking = math.abs(throttleInput)
+		if math.abs(throttleInput) > throttleDeadband and sign(speed) ~= sign(throttleInput) then
+			braking = clamp(math.abs(throttleInput))
 		else
 			throttleOut = math.abs(throttle)
 			reverse = throttleInput < 0
 		end
 	else
 		if throttle < 0 then
-			braking = math.abs(throttleInput)
+			braking = clamp(math.abs(throttleInput))
 		else
 			throttleOut = math.abs(throttle)
 			reverse = reverseButton
@@ -123,32 +131,35 @@ function onTick()
 	end
 
 	if eBrake or not occupied then
+		if cruiseControl then
+			cruisePID:reset()
+		end
 		cruiseControl = false
 		throttleOut = 0
 		braking = 1
 	end
 
-
-	local targetRps = minRps;
+	targetRps = minRps;
 	if (braking > 0) then
 		targetRps = lerp(cruiseRps, minRps, braking)
 	else
 		targetRps = lerp(cruiseRps, accelerationRps, throttleOut)
 	end
 
-	local clutch = 0
+	clutch = 0
 	if (rps > minRps) then
 		clutch = clamp(rps / cruiseRps)
 	end
 
-	local cvt = 1 - cvtPid:update(targetRps, rps)
-	local clutchLower = ((math.cos(cvt * (math.pi / 2))))
-	local clutchUpper = ((math.sin(cvt * (math.pi / 2))))
+	cvt = 1 - cvtPid:update(targetRps, rps)
+	clutchLower = ((math.cos(cvt * (math.pi / 2))))
+	clutchUpper = ((math.sin(cvt * (math.pi / 2))))
 
-	local clutchLower = clamp(clutchLower)
-	local clutchUpper = clamp(clutchUpper)
+	clutchLower = clamp(clutchLower)
+	clutchUpper = clamp(clutchUpper)
 
-	local leftWheelSteer, rightWheelSteer = calculateAckermannSteering(steering)
+	steeringScale = lerp(1, minSteeringAtSpeed, clamp(math.abs(speed) / steeringReductionSpeed))
+	leftWheelSteer, rightWheelSteer = calculateAckermannSteering(steering * steeringScale)
 	if invertSteering then
 		leftWheelSteer = -leftWheelSteer
 		rightWheelSteer = -rightWheelSteer
@@ -182,10 +193,17 @@ end
 
 function calculateAckermannSteering(desiredSteering)
 	-- Apply easing function based on the easeType property
-	local easedSteering = applyEasing(desiredSteering, easeType)
+	local easedSteering = clamp(applyEasing(clamp(desiredSteering, -1, 1), easeType), -1, 1)
 
-	-- Convert desired steering to radians (scaled by max steering angle of 0.8 to accout for ackermann steering geometry)
-	local desiredSteeringAngle = easedSteering * 0.8 * math.pi / 2
+	local geometryLimit = math.atan(wheelBase / (trackWidth / 2 + ackermannInnerRadiusMargin)) / (math.pi / 2)
+	local steeringLimit = math.min(0.8, geometryLimit)
+
+	-- Convert desired steering to radians while keeping Ackermann geometry stable.
+	local desiredSteeringAngle = easedSteering * steeringLimit * math.pi / 2
+
+	if math.abs(desiredSteeringAngle) < 0.0001 then
+		return 0, 0
+	end
 
 	-- Calculate turning radius
 	local turningRadius = wheelBase / math.tan(desiredSteeringAngle)
@@ -216,9 +234,10 @@ function applyEasing(input, localEaseType)
 	elseif localEaseType == "Sine" then
 		return sign(input) * (1 - math.cos((input * math.pi) / 2))
 	elseif localEaseType == "Circular" then
-		return 1 - math.sqrt(1 - input * input)
+		return sign(input) * (1 - math.sqrt(1 - input * input))
 	else
 		-- Default to Linear if an invalid easeType is provided
 		return input
 	end
 end
+

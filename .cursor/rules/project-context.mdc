@@ -1,0 +1,32 @@
+---
+description: Project context for Stormworks microcontroller scripts
+alwaysApply: true
+---
+
+# Stormworks Scripts Project Context
+
+This repository contains Lua scripts for Stormworks: Search and Rescue microcontrollers. The scripts are built with LifeBoatAPI and are intended to run inside Stormworks microprocessor Lua, where code size, tick-time behavior, and fixed input/output channel contracts matter.
+
+## Project Shape
+
+- Top-level `.lua` files are usually standalone microcontroller entry points with `onTick()` and sometimes `onDraw()`.
+- `Utils/` contains shared helper modules used through `require(...)`.
+- `_build/` contains LifeBoatAPI build scripts, generated build output, simulator/debug files, and build hooks.
+- `_build/_buildactions.lua` is where build completion hooks can write minimized scripts into Stormworks workspace or vehicle microcontroller script slots.
+- `_build/out/` and `_build/out/_intermediate/` are generated outputs; do not edit them as source.
+- Related Stormworks data repositories may exist beside this project, especially the user's `microprocessors` and `vehicles` folders under `%APPDATA%/Stormworks/data`. They should also not be edited directly
+
+## Coding Guidance
+
+- Preserve Stormworks microcontroller API usage: `input`, `output`, `property`, `screen`, `map`, and lifecycle functions such as `onTick` and `onDraw`.
+- Keep Lua compatible with the Stormworks runtime and LifeBoatAPI builder; avoid introducing dependencies or language features that may not survive minification or in-game execution.
+- Treat numeric and boolean channel assignments as stable contracts with the matching microcontroller XML/vehicle wiring.
+- Prefer small, direct changes. Many scripts are space-sensitive after LifeBoatAPI minimization.
+- When adding shared behavior, look for existing helpers in `Utils/` before creating new globals.
+- Be careful with globals: existing scripts often use globals intentionally for Stormworks persistence between ticks, but new locals are preferred for temporary values.
+
+## Build And Verification
+
+- Build behavior is driven by LifeBoatAPI files under `_build/`.
+- Build output may be copied into specific Stormworks workspace paths by `_build/_buildactions.lua`.
+- If build output changes are generated, explain that they are generated artifacts rather than hand-authored source.
